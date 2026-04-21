@@ -1,0 +1,2184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MySQL Mastery — Learning Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --surface2: #1a1e2a;
+    --surface3: #1f2435;
+    --border: #252b3b;
+    --border2: #2e364a;
+    --accent: #4f9cf9;
+    --accent2: #7c3aed;
+    --accent3: #10b981;
+    --accent4: #f59e0b;
+    --accent5: #ef4444;
+    --accent6: #ec4899;
+    --text: #e8ecf4;
+    --text2: #8892a4;
+    --text3: #555f73;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Sora', sans-serif;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: 260px;
+    height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .sidebar-logo {
+    padding: 1.5rem 1.25rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .sidebar-section {
+    padding: 0.75rem 1rem 0.25rem;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 1rem;
+    font-size: 12.5px;
+    color: var(--text2);
+    cursor: pointer;
+    border-radius: 6px;
+    margin: 1px 8px;
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(79,156,249,0.12); color: var(--accent); }
+
+  .nav-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .nav-item.locked { opacity: 0.4; cursor: not-allowed; }
+  .lock-icon { margin-left: auto; font-size: 10px; }
+
+  /* Progress in sidebar */
+  .sidebar-progress {
+    margin: 0.5rem 1rem;
+    padding: 0.75rem;
+    background: var(--surface2);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+
+  .sp-label { font-size: 10px; color: var(--text3); margin-bottom: 6px; }
+  .sp-bar { height: 4px; background: var(--border2); border-radius: 2px; overflow: hidden; }
+  .sp-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); width: 100%; transition: width 0.5s ease; }
+  .sp-text { font-size: 10px; color: var(--text2); margin-top: 4px; }
+
+  /* ===== MAIN ===== */
+  .main {
+    margin-left: 260px;
+    min-height: 100vh;
+  }
+
+  /* ===== HERO ===== */
+  .hero {
+    padding: 3rem 3rem 2rem;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, rgba(79,156,249,0.04) 0%, transparent 60%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: 'MySQL';
+    position: absolute;
+    right: -20px; top: -20px;
+    font-size: 140px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.02);
+    font-family: var(--mono);
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(79,156,249,0.1);
+    border: 1px solid rgba(79,156,249,0.25);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .hero h1 {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+  }
+
+  .hero h1 span { color: var(--accent); }
+
+  .hero p {
+    font-size: 14px;
+    color: var(--text2);
+    max-width: 500px;
+    line-height: 1.7;
+  }
+
+  .roadmap-cards {
+    display: flex;
+    gap: 10px;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .rmap-card {
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .rmap-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+  .rmap-card.done { border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.05); }
+  .rmap-card.active { border-color: rgba(79,156,249,0.4); background: rgba(79,156,249,0.08); }
+  .rmap-card.locked2 { opacity: 0.45; }
+
+  .rmap-card .wk { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+  .rmap-card .wt { font-weight: 600; font-size: 12px; color: var(--text); }
+  .rmap-card .ws { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+  /* ===== CONTENT ===== */
+  .content { padding: 2rem 3rem; }
+
+  /* ===== SECTION HEADER ===== */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .section-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .section-desc { font-size: 13px; color: var(--text2); margin-top: 2px; }
+
+  .section-badge {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ===== TOPIC CARDS ===== */
+  .topic-grid {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .topic-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .topic-card-header {
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+
+  .topic-card-header:hover { background: var(--surface2); }
+
+  .topic-day-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-family: var(--mono);
+    flex-shrink: 0;
+  }
+
+  .topic-card-title { font-size: 15px; font-weight: 600; flex: 1; }
+  .topic-card-cat {
+    font-size: 10px; font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+  }
+
+  .topic-chevron { color: var(--text3); font-size: 11px; transition: transform 0.2s; }
+  .topic-chevron.open { transform: rotate(90deg); }
+
+  .topic-card-body {
+    display: none;
+    padding: 0 1.25rem 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .topic-card-body.open { display: block; }
+
+  .topic-desc {
+    font-size: 13.5px;
+    color: var(--text2);
+    line-height: 1.75;
+    margin: 1rem 0 0.75rem;
+  }
+
+  /* ===== CONCEPTS ===== */
+  .concept-list {
+    display: grid;
+    gap: 6px;
+    margin: 0.75rem 0;
+  }
+
+  .concept-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+
+  .concept-bullet {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+
+  /* ===== CODE BLOCKS ===== */
+  .code-block {
+    margin: 0.75rem 0;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border2);
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--surface3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-lang {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: var(--mono);
+  }
+
+  .code-label {
+    font-size: 11px;
+    color: var(--text3);
+  }
+
+  .copy-btn {
+    font-size: 10px;
+    background: var(--border2);
+    border: none;
+    color: var(--text2);
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.15s;
+  }
+
+  .copy-btn:hover { background: var(--accent); color: white; }
+
+  .code-content {
+    padding: 1rem 1.25rem;
+    background: #0a0c10;
+    overflow-x: auto;
+  }
+
+  pre {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.8;
+    white-space: pre;
+  }
+
+  /* SQL Syntax highlighting */
+  .kw { color: #7c9eff; font-weight: 500; }    /* keywords */
+  .dt { color: #f59e0b; }                        /* data types */
+  .st { color: #10b981; }                        /* strings */
+  .cm { color: #4b5563; font-style: italic; }   /* comments */
+  .nm { color: #f472b6; }                        /* numbers */
+  .fn { color: #a78bfa; }                        /* functions */
+  .op { color: #64748b; }                        /* operators */
+  .tb { color: #60a5fa; }                        /* table/db names */
+  .co { color: #34d399; }                        /* column names */
+
+  /* ===== OUTPUT BLOCK ===== */
+  .output-block {
+    margin: 0.5rem 0 0.75rem;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid rgba(16,185,129,0.2);
+  }
+
+  .output-header {
+    padding: 6px 12px;
+    background: rgba(16,185,129,0.08);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--accent3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: var(--mono);
+  }
+
+  .output-content {
+    padding: 0.75rem 1rem;
+    background: rgba(16,185,129,0.03);
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--text2);
+    overflow-x: auto;
+  }
+
+  table.result-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 12px;
+  }
+
+  table.result-table th {
+    text-align: left;
+    padding: 5px 10px;
+    border-bottom: 1px solid var(--border2);
+    color: var(--accent3);
+    font-weight: 600;
+    font-family: var(--mono);
+  }
+
+  table.result-table td {
+    padding: 5px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    color: var(--text2);
+    font-family: var(--mono);
+  }
+
+  table.result-table tr:last-child td { border-bottom: none; }
+
+  /* ===== NOTE BLOCKS ===== */
+  .note {
+    margin: 0.75rem 0;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius);
+    font-size: 12.5px;
+    line-height: 1.65;
+    display: flex;
+    gap: 10px;
+  }
+
+  .note-tip { background: rgba(79,156,249,0.07); border-left: 3px solid var(--accent); color: #93b4e8; }
+  .note-warn { background: rgba(245,158,11,0.07); border-left: 3px solid var(--accent4); color: #d4a96a; }
+  .note-info { background: rgba(16,185,129,0.07); border-left: 3px solid var(--accent3); color: #6ecba3; }
+  .note-icon { font-size: 14px; flex-shrink: 0; }
+
+  /* ===== TABS ===== */
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    margin: 0.75rem 0 0;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+  }
+
+  .tab-btn {
+    font-size: 12px;
+    padding: 6px 12px;
+    border: none;
+    background: none;
+    color: var(--text3);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    font-family: var(--sans);
+    transition: all 0.15s;
+  }
+
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-btn:hover:not(.active) { color: var(--text2); }
+
+  .tab-pane { display: none; padding-top: 0.75rem; }
+  .tab-pane.active { display: block; }
+
+  /* ===== SECTION DIVIDER ===== */
+  .section-divider {
+    margin: 3rem 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text3);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 600;
+  }
+
+  .section-divider::before, .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ===== LOCKED SECTION ===== */
+  .locked-section {
+    padding: 3rem;
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    border: 1px dashed var(--border2);
+    text-align: center;
+    margin: 1rem 0;
+  }
+
+  .locked-section .lock-big { font-size: 36px; margin-bottom: 0.75rem; opacity: 0.4; }
+  .locked-section h3 { font-size: 16px; font-weight: 600; color: var(--text2); margin-bottom: 0.4rem; }
+  .locked-section p { font-size: 13px; color: var(--text3); line-height: 1.6; }
+
+  /* ===== QUICK REF ===== */
+  .quick-ref-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+    margin: 0.75rem 0;
+  }
+
+  .qr-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.6rem 0.9rem;
+  }
+
+  .qr-cmd { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 600; }
+  .qr-desc { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  /* ===== DATA TYPES TABLE ===== */
+  .dt-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 0.75rem 0; }
+  .dt-table th { text-align: left; padding: 8px 12px; background: var(--surface2); color: var(--text2); font-weight: 600; border-bottom: 1px solid var(--border2); }
+  .dt-table td { padding: 7px 12px; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: top; line-height: 1.5; }
+  .dt-table tr:last-child td { border-bottom: none; }
+  .dt-table .type-name { font-family: var(--mono); color: var(--accent4); font-size: 12px; }
+  .dt-table .type-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+
+  /* ===== CONSTRAINT TABLE ===== */
+  .ct-grid { display: grid; gap: 8px; margin: 0.75rem 0; }
+  .ct-row {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    align-items: start;
+  }
+  .ct-name { font-family: var(--mono); font-size: 12px; color: var(--accent6); font-weight: 600; }
+  .ct-desc { font-size: 12.5px; color: var(--text2); line-height: 1.5; }
+
+  /* ===== FOOTER ===== */
+  .content-footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: gap;
+  }
+
+  .footer-text { font-size: 12px; color: var(--text3); }
+
+  /* ===== SCROLLBAR ===== */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    .sidebar { width: 220px; }
+    .main { margin-left: 220px; }
+    .content, .hero { padding-left: 1.5rem; padding-right: 1.5rem; }
+  }
+
+  @media (max-width: 680px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+  }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .topic-card { animation: fadeIn 0.3s ease both; }
+  .topic-card:nth-child(1) { animation-delay: 0.05s; }
+  .topic-card:nth-child(2) { animation-delay: 0.1s; }
+  .topic-card:nth-child(3) { animation-delay: 0.15s; }
+  .topic-card:nth-child(4) { animation-delay: 0.2s; }
+  .topic-card:nth-child(5) { animation-delay: 0.25s; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">MySQL Mastery</div>
+    <div class="logo-sub">Learning Hub</div>
+  </div>
+
+  <div style="padding: 0.75rem 1rem;">
+    <div class="sidebar-progress">
+      <div class="sp-label">Overall Progress</div>
+      <div class="sp-bar"><div class="sp-fill" id="prog-fill"></div></div>
+      <div class="sp-text" id="prog-text">All 8 Weeks — Fully Unlocked 🎉</div>
+    </div>
+  </div>
+
+  <div class="sidebar-section">Foundations</div>
+  <a class="nav-item active" href="#foundations">
+    <div class="nav-dot" style="background:#4f9cf9"></div>
+    Week 1 — Setup & DDL
+  </a>
+
+  <div class="sidebar-section">Intermediate</div>
+  <a class="nav-item" href="#dml">
+    <div class="nav-dot" style="background:#10b981"></div>
+    Week 2 — DML
+  </a>
+  <a class="nav-item" href="#joins">
+    <div class="nav-dot" style="background:#7c3aed"></div>
+    Week 3 — Joins
+  </a>
+  <a class="nav-item" href="#functions">
+    <div class="nav-dot" style="background:#f59e0b"></div>
+    Week 4 — Functions
+  </a>
+  <a class="nav-item" href="#indexes">
+    <div class="nav-dot" style="background:#ef4444"></div>
+    Week 5 — Indexes
+  </a>
+  <a class="nav-item" href="#transactions">
+    <div class="nav-dot" style="background:#ec4899"></div>
+    Week 6 — Transactions
+  </a>
+
+  <div class="sidebar-section">Advanced</div>
+  <a class="nav-item" href="#advanced">
+    <div class="nav-dot" style="background:#8b5cf6"></div>
+    Week 7 — Security & CTEs
+  </a>
+  <a class="nav-item" href="#expert">
+    <div class="nav-dot" style="background:#06b6d4"></div>
+    Week 8 — Expert Topics
+  </a>
+
+  <div style="padding: 1rem; margin-top: auto; border-top: 1px solid var(--border);">
+    <div style="font-size: 10px; color: var(--text3); line-height: 1.6;">
+      8-Week SQL Curriculum<br>
+      Scratch → Advanced
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">📚 8-Week Curriculum</div>
+    <h1>MySQL <span>Mastery</span><br>Learning Hub</h1>
+    <p>Your structured path from zero to advanced SQL. Each week builds on the last — complete examples, live code, and real-world patterns.</p>
+
+    <div class="roadmap-cards">
+      <div class="rmap-card active" onclick="scrollTo('#foundations')">
+        <div class="wk">Week 1</div>
+        <div class="wt">Foundations</div>
+        <div class="ws">DDL · Setup · SELECT</div>
+      </div>
+      <div class="rmap-card">
+        <div class="wk">Week 2</div>
+        <div class="wt">Data Manipulation</div>
+        <div class="ws">INSERT · UPDATE · DELETE</div>
+      </div>
+      <div class="rmap-card">
+        <div class="wk">Week 3</div>
+        <div class="wt">Joins</div>
+        <div class="ws">Foreign Keys · All Joins</div>
+      </div>
+      <div class="rmap-card">
+        <div class="wk">Week 4</div>
+        <div class="wt">Functions</div>
+        <div class="ws">Aggregate · String · Date</div>
+      </div>
+      <div class="rmap-card">
+        <div class="wk">Wk 5–8</div>
+        <div class="wt">Intermediate → Expert</div>
+        <div class="ws">Indexes · Transactions · CTEs</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ===================== FOUNDATIONS ===================== -->
+    <div id="foundations">
+      <div class="section-header">
+        <div class="section-icon" style="background: rgba(79,156,249,0.12);">🗄️</div>
+        <div>
+          <div class="section-title">Foundations — Week 1</div>
+          <div class="section-desc">Database basics · DDL · Data types · Constraints · Basic SELECT</div>
+        </div>
+        <span class="section-badge" style="background:rgba(79,156,249,0.12);color:var(--accent);">In Progress</span>
+      </div>
+
+      <div class="topic-grid">
+
+        <!-- ===== DAY 1 ===== -->
+        <div class="topic-card" id="day1">
+          <div class="topic-card-header" onclick="toggleCard('day1')">
+            <span class="topic-day-badge" style="background:rgba(79,156,249,0.15);color:#4f9cf9;">MON</span>
+            <span class="topic-card-title">Introduction, Installation & First Connection</span>
+            <span class="topic-card-cat" style="background:rgba(79,156,249,0.1);color:#4f9cf9;">Basics</span>
+            <span class="topic-chevron open" id="chev-day1">▶</span>
+          </div>
+          <div class="topic-card-body open" id="body-day1">
+            <p class="topic-desc">MySQL is a relational database management system (RDBMS). Data is stored in tables with rows and columns, and tables can relate to each other through keys. SQL (Structured Query Language) is the language you use to interact with it.</p>
+
+            <div class="note note-info"><span class="note-icon">ℹ️</span><span><strong>Key Concepts:</strong> Database, Table, Row (Record), Column (Field), Schema, Primary Key, SQL vs MySQL</span></div>
+
+            <div class="concept-list">
+              <div class="concept-item"><div class="concept-bullet"></div><span><strong>RDBMS</strong> — organizes data into structured tables with relationships between them</span></div>
+              <div class="concept-item"><div class="concept-bullet"></div><span><strong>Schema</strong> — the blueprint of your database (table structure, data types, constraints)</span></div>
+              <div class="concept-item"><div class="concept-bullet"></div><span><strong>Primary Key</strong> — a column that uniquely identifies each row</span></div>
+              <div class="concept-item"><div class="concept-bullet"></div><span><strong>SQL categories</strong> — DDL, DML, DQL, DCL, TCL (you'll learn all of these)</span></div>
+            </div>
+
+            <div class="tab-bar">
+              <button class="tab-btn active" onclick="switchTab('d1', 'install', this)">CLI Commands</button>
+              <button class="tab-btn" onclick="switchTab('d1', 'first', this)">First Queries</button>
+            </div>
+
+            <div id="d1-install" class="tab-pane active">
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">bash — terminal</span>
+                  <span class="code-label">After installing MySQL</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content"><pre><span class="cm"># Start MySQL service (Linux/Mac)</span>
+sudo systemctl start mysql        <span class="cm"># Linux</span>
+brew services start mysql         <span class="cm"># Mac (Homebrew)</span>
+
+<span class="cm"># Connect to MySQL (enter your password when prompted)</span>
+mysql -u root -p
+
+<span class="cm"># Or connect with all params</span>
+mysql -h localhost -u root -p -P 3306</pre></div>
+              </div>
+            </div>
+
+            <div id="d1-first" class="tab-pane">
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">sql</span>
+                  <span class="code-label">First SQL commands inside MySQL shell</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content"><pre><span class="cm">-- Show all existing databases</span>
+<span class="kw">SHOW</span> <span class="kw">DATABASES</span>;
+
+<span class="cm">-- Check which version you're on</span>
+<span class="kw">SELECT</span> <span class="fn">VERSION</span>();
+
+<span class="cm">-- Check current date and time</span>
+<span class="kw">SELECT</span> <span class="fn">NOW</span>();
+
+<span class="cm">-- Show current user</span>
+<span class="kw">SELECT</span> <span class="fn">CURRENT_USER</span>();
+
+<span class="cm">-- See all tables in current database</span>
+<span class="kw">SHOW</span> <span class="kw">TABLES</span>;</pre></div>
+              </div>
+              <div class="output-block">
+                <div class="output-header">Output — SHOW DATABASES</div>
+                <div class="output-content">
+                  <table class="result-table">
+                    <tr><th>Database</th></tr>
+                    <tr><td>information_schema</td></tr>
+                    <tr><td>mysql</td></tr>
+                    <tr><td>performance_schema</td></tr>
+                    <tr><td>sys</td></tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== DAY 2 ===== -->
+        <div class="topic-card" id="day2">
+          <div class="topic-card-header" onclick="toggleCard('day2')">
+            <span class="topic-day-badge" style="background:rgba(124,58,237,0.15);color:#7c3aed;">TUE</span>
+            <span class="topic-card-title">CREATE DATABASE & CREATE TABLE — Data Types</span>
+            <span class="topic-card-cat" style="background:rgba(79,156,249,0.1);color:#4f9cf9;">DDL</span>
+            <span class="topic-chevron" id="chev-day2">▶</span>
+          </div>
+          <div class="topic-card-body" id="body-day2">
+            <p class="topic-desc">DDL (Data Definition Language) is used to define and modify the structure of your database. <code style="color:var(--accent);font-family:var(--mono);font-size:12px;">CREATE</code>, <code style="color:var(--accent);font-family:var(--mono);font-size:12px;">ALTER</code>, and <code style="color:var(--accent);font-family:var(--mono);font-size:12px;">DROP</code> are the core DDL commands. Choosing the right data type is critical — it affects storage, performance, and data integrity.</p>
+
+            <div class="note note-tip"><span class="note-icon">💡</span><span>Always specify a character set when creating databases. <code style="font-family:var(--mono)">utf8mb4</code> supports emojis and all Unicode characters — use it by default.</span></div>
+
+            <!-- Data Types Table -->
+            <div style="margin: 0.75rem 0; font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px;">MySQL Data Types Reference</div>
+            <table class="dt-table">
+              <thead>
+                <tr><th>Category</th><th>Type</th><th>Description</th><th>Example Use</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td rowspan="4" style="color:var(--accent4);font-weight:600;">Numeric</td>
+                  <td><span class="type-name">INT</span></td>
+                  <td>Whole numbers (−2B to 2B)</td>
+                  <td>user_id, age, quantity</td>
+                </tr>
+                <tr>
+                  <td><span class="type-name">BIGINT</span></td>
+                  <td>Large whole numbers</td>
+                  <td>post_views, total_bytes</td>
+                </tr>
+                <tr>
+                  <td><span class="type-name">DECIMAL(p,s)</span></td>
+                  <td>Exact fixed-point decimal</td>
+                  <td>price (10,2) = 99999999.99</td>
+                </tr>
+                <tr>
+                  <td><span class="type-name">FLOAT / DOUBLE</span></td>
+                  <td>Approximate floating point</td>
+                  <td>coordinates, scientific values</td>
+                </tr>
+                <tr>
+                  <td rowspan="4" style="color:var(--accent);font-weight:600;">String</td>
+                  <td><span class="type-name">VARCHAR(n)</span></td>
+                  <td>Variable-length string (max n chars)</td>
+                  <td>name VARCHAR(100), email</td>
+                </tr>
+                <tr>
+                  <td><span class="type-name">CHAR(n)</span></td>
+                  <td>Fixed-length string (padded)</td>
+                  <td>country_code CHAR(2)</td>
+                </tr>
+                <tr>
+                  <td><span class="type-name">TEXT</span></td>
+                  <td>Long text up to 65,535 chars</td>
+                  <td>description, blog_content</td>
+                </tr>
+                <tr>
+                  <td><span class="type-name">ENUM</span></td>
+                  <td>One value from a defined list</td>
+                  <td>status ENUM('active','inactive')</td>
+                </tr>
+                <tr>
+                  <td rowspan="3" style="color:var(--accent3);font-weight:600;">Date/Time</td>
+                  <td><span class="type-name">DATE</span></td>
+                  <td>YYYY-MM-DD</td>
+                  <td>birth_date, hire_date</td>
+                </tr>
+                <tr>
+                  <td><span class="type-name">DATETIME</span></td>
+                  <td>YYYY-MM-DD HH:MM:SS</td>
+                  <td>created_at, updated_at</td>
+                </tr>
+                <tr>
+                  <td><span class="type-name">TIMESTAMP</span></td>
+                  <td>UTC timestamp, auto-update capable</td>
+                  <td>last_login (auto timestamps)</td>
+                </tr>
+                <tr>
+                  <td rowspan="2" style="color:var(--accent6);font-weight:600;">Other</td>
+                  <td><span class="type-name">BOOLEAN</span></td>
+                  <td>TINYINT(1) — 0 or 1</td>
+                  <td>is_active, is_verified</td>
+                </tr>
+                <tr>
+                  <td><span class="type-name">JSON</span></td>
+                  <td>Native JSON storage (MySQL 5.7+)</td>
+                  <td>metadata, settings</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="tab-bar">
+              <button class="tab-btn active" onclick="switchTab('d2', 'db', this)">Create Database</button>
+              <button class="tab-btn" onclick="switchTab('d2', 'tbl', this)">Create Table</button>
+              <button class="tab-btn" onclick="switchTab('d2', 'desc', this)">Describe Table</button>
+            </div>
+
+            <div id="d2-db" class="tab-pane active">
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">sql — DDL</span>
+                  <span class="code-label">Create a database</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content"><pre><span class="cm">-- Create a new database</span>
+<span class="kw">CREATE DATABASE</span> <span class="tb">myshop</span>;
+
+<span class="cm">-- Best practice: specify character set and collation</span>
+<span class="kw">CREATE DATABASE</span> <span class="tb">myshop</span>
+  <span class="kw">CHARACTER SET</span> utf8mb4
+  <span class="kw">COLLATE</span> utf8mb4_unicode_ci;
+
+<span class="cm">-- Avoid error if database already exists</span>
+<span class="kw">CREATE DATABASE IF NOT EXISTS</span> <span class="tb">myshop</span>;
+
+<span class="cm">-- Select the database to work in</span>
+<span class="kw">USE</span> <span class="tb">myshop</span>;
+
+<span class="cm">-- Confirm which database is active</span>
+<span class="kw">SELECT</span> <span class="fn">DATABASE</span>();</pre></div>
+              </div>
+            </div>
+
+            <div id="d2-tbl" class="tab-pane">
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">sql — DDL</span>
+                  <span class="code-label">Create tables with proper data types</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content"><pre><span class="kw">USE</span> <span class="tb">myshop</span>;
+
+<span class="cm">-- Create a customers table</span>
+<span class="kw">CREATE TABLE</span> <span class="tb">customers</span> (
+  <span class="co">customer_id</span>  <span class="dt">INT</span>             <span class="kw">AUTO_INCREMENT PRIMARY KEY</span>,
+  <span class="co">first_name</span>   <span class="dt">VARCHAR</span>(<span class="nm">50</span>)    <span class="kw">NOT NULL</span>,
+  <span class="co">last_name</span>    <span class="dt">VARCHAR</span>(<span class="nm">50</span>)    <span class="kw">NOT NULL</span>,
+  <span class="co">email</span>        <span class="dt">VARCHAR</span>(<span class="nm">120</span>)   <span class="kw">NOT NULL UNIQUE</span>,
+  <span class="co">phone</span>        <span class="dt">VARCHAR</span>(<span class="nm">20</span>),
+  <span class="co">birth_date</span>   <span class="dt">DATE</span>,
+  <span class="co">is_active</span>    <span class="dt">BOOLEAN</span>         <span class="kw">DEFAULT</span> <span class="nm">TRUE</span>,
+  <span class="co">created_at</span>   <span class="dt">DATETIME</span>        <span class="kw">DEFAULT</span> <span class="fn">CURRENT_TIMESTAMP</span>
+);
+
+<span class="cm">-- Create a products table</span>
+<span class="kw">CREATE TABLE</span> <span class="tb">products</span> (
+  <span class="co">product_id</span>   <span class="dt">INT</span>             <span class="kw">AUTO_INCREMENT PRIMARY KEY</span>,
+  <span class="co">name</span>         <span class="dt">VARCHAR</span>(<span class="nm">100</span>)   <span class="kw">NOT NULL</span>,
+  <span class="co">description</span>  <span class="dt">TEXT</span>,
+  <span class="co">price</span>        <span class="dt">DECIMAL</span>(<span class="nm">10</span>,<span class="nm">2</span>) <span class="kw">NOT NULL</span>,
+  <span class="co">stock_qty</span>    <span class="dt">INT</span>             <span class="kw">DEFAULT</span> <span class="nm">0</span>,
+  <span class="co">category</span>     <span class="dt">ENUM</span>(<span class="st">'electronics'</span>, <span class="st">'clothing'</span>, <span class="st">'food'</span>, <span class="st">'books'</span>),
+  <span class="co">created_at</span>   <span class="dt">TIMESTAMP</span>       <span class="kw">DEFAULT</span> <span class="fn">CURRENT_TIMESTAMP</span>
+);</pre></div>
+              </div>
+            </div>
+
+            <div id="d2-desc" class="tab-pane">
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">sql</span>
+                  <span class="code-label">Inspect table structure</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content"><pre><span class="cm">-- See columns, types, and constraints</span>
+<span class="kw">DESCRIBE</span> <span class="tb">customers</span>;
+<span class="cm">-- or shorthand:</span>
+<span class="kw">DESC</span> <span class="tb">customers</span>;
+
+<span class="cm">-- See the full CREATE TABLE statement</span>
+<span class="kw">SHOW CREATE TABLE</span> <span class="tb">customers</span>;</pre></div>
+              </div>
+              <div class="output-block">
+                <div class="output-header">Output — DESCRIBE customers</div>
+                <div class="output-content">
+                  <table class="result-table">
+                    <tr><th>Field</th><th>Type</th><th>Null</th><th>Key</th><th>Default</th><th>Extra</th></tr>
+                    <tr><td>customer_id</td><td>int</td><td>NO</td><td>PRI</td><td>NULL</td><td>auto_increment</td></tr>
+                    <tr><td>first_name</td><td>varchar(50)</td><td>NO</td><td></td><td>NULL</td><td></td></tr>
+                    <tr><td>email</td><td>varchar(120)</td><td>NO</td><td>UNI</td><td>NULL</td><td></td></tr>
+                    <tr><td>is_active</td><td>tinyint(1)</td><td>YES</td><td></td><td>1</td><td></td></tr>
+                    <tr><td>created_at</td><td>datetime</td><td>YES</td><td></td><td>CURRENT_TIMESTAMP</td><td></td></tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== DAY 3 ===== -->
+        <div class="topic-card" id="day3">
+          <div class="topic-card-header" onclick="toggleCard('day3')">
+            <span class="topic-day-badge" style="background:rgba(16,185,129,0.15);color:#10b981;">WED</span>
+            <span class="topic-card-title">Constraints — Rules That Protect Your Data</span>
+            <span class="topic-card-cat" style="background:rgba(79,156,249,0.1);color:#4f9cf9;">DDL</span>
+            <span class="topic-chevron" id="chev-day3">▶</span>
+          </div>
+          <div class="topic-card-body" id="body-day3">
+            <p class="topic-desc">Constraints enforce rules on data at the database level — they prevent bad data from ever entering your tables, regardless of the application code. Learn to rely on the database itself as the last line of defense.</p>
+
+            <div class="ct-grid">
+              <div class="ct-row">
+                <div class="ct-name">PRIMARY KEY</div>
+                <div class="ct-desc">Uniquely identifies each row. Cannot be NULL. Usually an auto-incrementing integer.</div>
+              </div>
+              <div class="ct-row">
+                <div class="ct-name">NOT NULL</div>
+                <div class="ct-desc">The column must always have a value. Prevents empty records for required fields like name or email.</div>
+              </div>
+              <div class="ct-row">
+                <div class="ct-name">UNIQUE</div>
+                <div class="ct-desc">No two rows can have the same value in this column. Unlike PRIMARY KEY, a column can be UNIQUE and also be NULL.</div>
+              </div>
+              <div class="ct-row">
+                <div class="ct-name">DEFAULT</div>
+                <div class="ct-desc">Value used if none is supplied during INSERT. Saves you from specifying common values every time.</div>
+              </div>
+              <div class="ct-row">
+                <div class="ct-name">AUTO_INCREMENT</div>
+                <div class="ct-desc">MySQL automatically assigns the next integer value. Used almost universally for primary keys.</div>
+              </div>
+              <div class="ct-row">
+                <div class="ct-name">CHECK</div>
+                <div class="ct-desc">Validates that a column value meets a condition. Example: age must be >= 0. Available natively in MySQL 8.0+.</div>
+              </div>
+            </div>
+
+            <div class="tab-bar">
+              <button class="tab-btn active" onclick="switchTab('d3', 'cons', this)">Constraints in Action</button>
+              <button class="tab-btn" onclick="switchTab('d3', 'check', this)">CHECK Constraint</button>
+              <button class="tab-btn" onclick="switchTab('d3', 'addcons', this)">Add After Creation</button>
+            </div>
+
+            <div id="d3-cons" class="tab-pane active">
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">sql — DDL</span>
+                  <span class="code-label">All major constraints in one table</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content"><pre><span class="kw">CREATE TABLE</span> <span class="tb">employees</span> (
+  <span class="cm">-- PRIMARY KEY + AUTO_INCREMENT</span>
+  <span class="co">emp_id</span>       <span class="dt">INT</span>              <span class="kw">AUTO_INCREMENT PRIMARY KEY</span>,
+
+  <span class="cm">-- NOT NULL: required fields</span>
+  <span class="co">first_name</span>   <span class="dt">VARCHAR</span>(<span class="nm">50</span>)     <span class="kw">NOT NULL</span>,
+  <span class="co">last_name</span>    <span class="dt">VARCHAR</span>(<span class="nm">50</span>)     <span class="kw">NOT NULL</span>,
+
+  <span class="cm">-- UNIQUE: no duplicates allowed</span>
+  <span class="co">email</span>        <span class="dt">VARCHAR</span>(<span class="nm">120</span>)    <span class="kw">NOT NULL UNIQUE</span>,
+  <span class="co">emp_code</span>     <span class="dt">CHAR</span>(<span class="nm">6</span>)         <span class="kw">UNIQUE</span>,
+
+  <span class="cm">-- DEFAULT: automatic value</span>
+  <span class="co">department</span>   <span class="dt">VARCHAR</span>(<span class="nm">50</span>)     <span class="kw">DEFAULT</span> <span class="st">'General'</span>,
+  <span class="co">is_active</span>    <span class="dt">BOOLEAN</span>          <span class="kw">DEFAULT</span> <span class="nm">TRUE</span>,
+  <span class="co">hire_date</span>    <span class="dt">DATE</span>             <span class="kw">DEFAULT</span> (<span class="fn">CURDATE</span>()),
+  <span class="co">created_at</span>   <span class="dt">TIMESTAMP</span>        <span class="kw">DEFAULT</span> <span class="fn">CURRENT_TIMESTAMP</span>,
+
+  <span class="cm">-- Named composite UNIQUE constraint</span>
+  <span class="kw">CONSTRAINT</span> uq_emp_name <span class="kw">UNIQUE</span> (<span class="co">first_name</span>, <span class="co">last_name</span>, <span class="co">department</span>)
+);</pre></div>
+              </div>
+            </div>
+
+            <div id="d3-check" class="tab-pane">
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">sql — DDL</span>
+                  <span class="code-label">CHECK constraints (MySQL 8.0+)</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content"><pre><span class="kw">CREATE TABLE</span> <span class="tb">products</span> (
+  <span class="co">product_id</span>  <span class="dt">INT</span>              <span class="kw">AUTO_INCREMENT PRIMARY KEY</span>,
+  <span class="co">name</span>        <span class="dt">VARCHAR</span>(<span class="nm">100</span>)    <span class="kw">NOT NULL</span>,
+  <span class="co">price</span>       <span class="dt">DECIMAL</span>(<span class="nm">10</span>,<span class="nm">2</span>)  <span class="kw">NOT NULL</span>,
+  <span class="co">stock</span>       <span class="dt">INT</span>              <span class="kw">DEFAULT</span> <span class="nm">0</span>,
+  <span class="co">discount</span>    <span class="dt">DECIMAL</span>(<span class="nm">5</span>,<span class="nm">2</span>)   <span class="kw">DEFAULT</span> <span class="nm">0</span>,
+
+  <span class="cm">-- Inline CHECK: price must be positive</span>
+  <span class="kw">CONSTRAINT</span> chk_price   <span class="kw">CHECK</span> (<span class="co">price</span> <span class="op">></span> <span class="nm">0</span>),
+
+  <span class="cm">-- stock cannot be negative</span>
+  <span class="kw">CONSTRAINT</span> chk_stock   <span class="kw">CHECK</span> (<span class="co">stock</span> <span class="op">>=</span> <span class="nm">0</span>),
+
+  <span class="cm">-- discount is a percentage 0–100</span>
+  <span class="kw">CONSTRAINT</span> chk_disc    <span class="kw">CHECK</span> (<span class="co">discount</span> <span class="kw">BETWEEN</span> <span class="nm">0</span> <span class="kw">AND</span> <span class="nm">100</span>),
+
+  <span class="cm">-- discount cannot exceed price</span>
+  <span class="kw">CONSTRAINT</span> chk_disc2   <span class="kw">CHECK</span> (<span class="co">discount</span> <span class="op"><</span> <span class="co">price</span>)
+);
+
+<span class="cm">-- This INSERT will FAIL — price is negative</span>
+<span class="kw">INSERT INTO</span> <span class="tb">products</span> (<span class="co">name</span>, <span class="co">price</span>) <span class="kw">VALUES</span> (<span class="st">'Widget'</span>, <span class="op">-</span><span class="nm">5.00</span>);
+<span class="cm">-- ERROR 3819 (HY000): Check constraint 'chk_price' is violated</span></pre></div>
+              </div>
+              <div class="note note-warn"><span class="note-icon">⚠️</span><span>CHECK constraints are enforced in MySQL 8.0.16+. In older versions, they are parsed but silently ignored. Always check your MySQL version with <code style="font-family:var(--mono)">SELECT VERSION();</code></span></div>
+            </div>
+
+            <div id="d3-addcons" class="tab-pane">
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">sql — DDL</span>
+                  <span class="code-label">Add constraints to existing tables</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content"><pre><span class="cm">-- Add a UNIQUE constraint after table creation</span>
+<span class="kw">ALTER TABLE</span> <span class="tb">employees</span>
+  <span class="kw">ADD CONSTRAINT</span> uq_email <span class="kw">UNIQUE</span> (<span class="co">email</span>);
+
+<span class="cm">-- Add a NOT NULL constraint (requires MODIFY)</span>
+<span class="kw">ALTER TABLE</span> <span class="tb">employees</span>
+  <span class="kw">MODIFY COLUMN</span> <span class="co">first_name</span> <span class="dt">VARCHAR</span>(<span class="nm">50</span>) <span class="kw">NOT NULL</span>;
+
+<span class="cm">-- Add a CHECK constraint</span>
+<span class="kw">ALTER TABLE</span> <span class="tb">employees</span>
+  <span class="kw">ADD CONSTRAINT</span> chk_salary <span class="kw">CHECK</span> (<span class="co">salary</span> <span class="op">></span> <span class="nm">0</span>);
+
+<span class="cm">-- Remove a named constraint</span>
+<span class="kw">ALTER TABLE</span> <span class="tb">employees</span>
+  <span class="kw">DROP CONSTRAINT</span> chk_salary;
+
+<span class="cm">-- Show all constraints on a table</span>
+<span class="kw">SELECT</span> <span class="co">constraint_name</span>, <span class="co">constraint_type</span>
+<span class="kw">FROM</span> information_schema.table_constraints
+<span class="kw">WHERE</span> <span class="co">table_name</span> <span class="op">=</span> <span class="st">'employees'</span>;</pre></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== DAY 4 ===== -->
+        <div class="topic-card" id="day4">
+          <div class="topic-card-header" onclick="toggleCard('day4')">
+            <span class="topic-day-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;">THU</span>
+            <span class="topic-card-title">ALTER TABLE & DROP — Modifying Structure</span>
+            <span class="topic-card-cat" style="background:rgba(79,156,249,0.1);color:#4f9cf9;">DDL</span>
+            <span class="topic-chevron" id="chev-day4">▶</span>
+          </div>
+          <div class="topic-card-body" id="body-day4">
+            <p class="topic-desc">Once tables are created, you'll need to modify them as your application evolves. <code style="color:var(--accent);font-family:var(--mono);font-size:12px;">ALTER TABLE</code> lets you add, modify, or remove columns and constraints without losing data.</p>
+
+            <div class="note note-warn"><span class="note-icon">⚠️</span><span><strong>Production Warning:</strong> <code style="font-family:var(--mono)">ALTER TABLE</code> on large tables can lock the entire table for minutes. Use tools like pt-online-schema-change or MySQL 8's instant DDL in production.</span></div>
+
+            <div class="tab-bar">
+              <button class="tab-btn active" onclick="switchTab('d4', 'alter', this)">ALTER TABLE</button>
+              <button class="tab-btn" onclick="switchTab('d4', 'drop', this)">DROP & TRUNCATE</button>
+              <button class="tab-btn" onclick="switchTab('d4', 'rename', this)">RENAME</button>
+            </div>
+
+            <div id="d4-alter" class="tab-pane active">
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">sql — DDL</span>
+                  <span class="code-label">All ALTER TABLE operations</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content"><pre><span class="cm">-- ADD a new column</span>
+<span class="kw">ALTER TABLE</span> <span class="tb">customers</span>
+  <span class="kw">ADD COLUMN</span> <span class="co">loyalty_points</span> <span class="dt">INT</span> <span class="kw">DEFAULT</span> <span class="nm">0</span>;
+
+<span class="cm">-- ADD column at a specific position</span>
+<span class="kw">ALTER TABLE</span> <span class="tb">customers</span>
+  <span class="kw">ADD COLUMN</span> <span class="co">middle_name</span> <span class="dt">VARCHAR</span>(<span class="nm">50</span>) <span class="kw">AFTER</span> <span class="co">first_name</span>;
+
+<span class="cm">-- MODIFY: change data type or constraints</span>
+<span class="kw">ALTER TABLE</span> <span class="tb">customers</span>
+  <span class="kw">MODIFY COLUMN</span> <span class="co">phone</span> <span class="dt">VARCHAR</span>(<span class="nm">30</span>) <span class="kw">NOT NULL</span>;
+
+<span class="cm">-- CHANGE: rename a column AND change its type</span>
+<span class="kw">ALTER TABLE</span> <span class="tb">customers</span>
+  <span class="kw">CHANGE COLUMN</span> <span class="co">phone</span> <span class="co">phone_number</span> <span class="dt">VARCHAR</span>(<span class="nm">30</span>);
+
+<span class="cm">-- DROP a column</span>
+<span class="kw">ALTER TABLE</span> <span class="tb">customers</span>
+  <span class="kw">DROP COLUMN</span> <span class="co">middle_name</span>;
+
+<span class="cm">-- Multiple changes in one statement (more efficient)</span>
+<span class="kw">ALTER TABLE</span> <span class="tb">customers</span>
+  <span class="kw">ADD COLUMN</span>    <span class="co">newsletter</span>  <span class="dt">BOOLEAN</span>      <span class="kw">DEFAULT</span> <span class="nm">FALSE</span>,
+  <span class="kw">ADD COLUMN</span>    <span class="co">country</span>     <span class="dt">VARCHAR</span>(<span class="nm">60</span>)  <span class="kw">DEFAULT</span> <span class="st">'India'</span>,
+  <span class="kw">MODIFY COLUMN</span> <span class="co">email</span>       <span class="dt">VARCHAR</span>(<span class="nm">150</span>) <span class="kw">NOT NULL</span>;</pre></div>
+              </div>
+            </div>
+
+            <div id="d4-drop" class="tab-pane">
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">sql — DDL</span>
+                  <span class="code-label">DROP vs TRUNCATE — know the difference</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content"><pre><span class="cm">-- TRUNCATE: removes all rows, keeps structure, resets AUTO_INCREMENT</span>
+<span class="cm">-- Fast. Cannot be rolled back in MySQL (implicit commit).</span>
+<span class="kw">TRUNCATE TABLE</span> <span class="tb">customers</span>;
+
+<span class="cm">-- DROP TABLE: removes table + all data permanently</span>
+<span class="kw">DROP TABLE</span> <span class="tb">customers</span>;
+
+<span class="cm">-- Safe version: only drop if it exists</span>
+<span class="kw">DROP TABLE IF EXISTS</span> <span class="tb">customers</span>;
+
+<span class="cm">-- DROP DATABASE: deletes entire database and all its tables</span>
+<span class="kw">DROP DATABASE</span> <span class="tb">myshop</span>;
+<span class="kw">DROP DATABASE IF EXISTS</span> <span class="tb">myshop</span>;
+
+<span class="cm">-- Comparison summary:
+-- DELETE FROM table    → removes rows, can be WHERE filtered, rollback-able
+-- TRUNCATE TABLE       → removes ALL rows, resets ID, NOT rollback-able
+-- DROP TABLE           → removes the table itself entirely</span></pre></div>
+              </div>
+              <div class="note note-tip"><span class="note-icon">💡</span><span>Think of it this way: <strong>DELETE</strong> is like removing items from a box, <strong>TRUNCATE</strong> empties the box instantly, <strong>DROP</strong> destroys the box itself.</span></div>
+            </div>
+
+            <div id="d4-rename" class="tab-pane">
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">sql — DDL</span>
+                  <span class="code-label">Rename tables and columns</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content"><pre><span class="cm">-- Rename a table (two equivalent ways)</span>
+<span class="kw">RENAME TABLE</span> <span class="tb">customers</span> <span class="kw">TO</span> <span class="tb">users</span>;
+
+<span class="kw">ALTER TABLE</span> <span class="tb">customers</span> <span class="kw">RENAME TO</span> <span class="tb">users</span>;
+
+<span class="cm">-- Rename multiple tables at once</span>
+<span class="kw">RENAME TABLE</span>
+  <span class="tb">customers</span> <span class="kw">TO</span> <span class="tb">users</span>,
+  <span class="tb">products</span>  <span class="kw">TO</span> <span class="tb">items</span>;
+
+<span class="cm">-- Rename a column (must specify full type again)</span>
+<span class="kw">ALTER TABLE</span> <span class="tb">users</span>
+  <span class="kw">RENAME COLUMN</span> <span class="co">customer_id</span> <span class="kw">TO</span> <span class="co">user_id</span>;  <span class="cm">-- MySQL 8.0+</span>
+
+<span class="cm">-- Older MySQL: use CHANGE COLUMN instead</span>
+<span class="kw">ALTER TABLE</span> <span class="tb">users</span>
+  <span class="kw">CHANGE COLUMN</span> <span class="co">customer_id</span> <span class="co">user_id</span> <span class="dt">INT</span> <span class="kw">AUTO_INCREMENT PRIMARY KEY</span>;</pre></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== DAY 5 ===== -->
+        <div class="topic-card" id="day5">
+          <div class="topic-card-header" onclick="toggleCard('day5')">
+            <span class="topic-day-badge" style="background:rgba(236,72,153,0.15);color:#ec4899;">FRI</span>
+            <span class="topic-card-title">Basic SELECT — Querying Your Data</span>
+            <span class="topic-card-cat" style="background:rgba(124,58,237,0.12);color:#7c3aed;">DQL</span>
+            <span class="topic-chevron" id="chev-day5">▶</span>
+          </div>
+          <div class="topic-card-body" id="body-day5">
+            <p class="topic-desc">SELECT is the most used SQL statement — you'll write it hundreds of times a day. Master the fundamentals here and everything else builds on top. SQL clauses must be written in a specific order, and they are also executed in a specific internal order.</p>
+
+            <div class="note note-info"><span class="note-icon">ℹ️</span><span><strong>Clause order (write order):</strong> SELECT → FROM → WHERE → GROUP BY → HAVING → ORDER BY → LIMIT<br><strong>Execution order:</strong> FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT</span></div>
+
+            <div class="tab-bar">
+              <button class="tab-btn active" onclick="switchTab('d5', 'basic', this)">Basic SELECT</button>
+              <button class="tab-btn" onclick="switchTab('d5', 'where', this)">WHERE Filtering</button>
+              <button class="tab-btn" onclick="switchTab('d5', 'sort', this)">ORDER BY & LIMIT</button>
+              <button class="tab-btn" onclick="switchTab('d5', 'alias', this)">Aliases & DISTINCT</button>
+            </div>
+
+            <div id="d5-basic" class="tab-pane active">
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">sql — DQL</span>
+                  <span class="code-label">SELECT fundamentals — use these to query customers</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content"><pre><span class="cm">-- Select ALL columns (avoid in production — fetches unnecessary data)</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="tb">customers</span>;
+
+<span class="cm">-- Select SPECIFIC columns (always prefer this)</span>
+<span class="kw">SELECT</span> <span class="co">first_name</span>, <span class="co">last_name</span>, <span class="co">email</span>
+<span class="kw">FROM</span> <span class="tb">customers</span>;
+
+<span class="cm">-- Select with a calculated column</span>
+<span class="kw">SELECT</span>
+  <span class="co">first_name</span>,
+  <span class="co">last_name</span>,
+  <span class="co">price</span>,
+  <span class="co">price</span> <span class="op">*</span> <span class="nm">1.18</span>  <span class="cm">-- price with 18% GST</span>
+<span class="kw">FROM</span> <span class="tb">products</span>;
+
+<span class="cm">-- Literal values (no table needed)</span>
+<span class="kw">SELECT</span> <span class="nm">100</span> <span class="op">+</span> <span class="nm">200</span>;         <span class="cm">-- returns 300</span>
+<span class="kw">SELECT</span> <span class="st">'Hello'</span>, <span class="fn">NOW</span>();    <span class="cm">-- returns string and current time</span></pre></div>
+              </div>
+            </div>
+
+            <div id="d5-where" class="tab-pane">
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">sql — DQL</span>
+                  <span class="code-label">WHERE clause — filter rows by condition</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content"><pre><span class="cm">-- Basic comparison operators: = , != , < , > , <= , >=</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="tb">products</span> <span class="kw">WHERE</span> <span class="co">price</span> <span class="op">></span> <span class="nm">500</span>;
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="tb">customers</span> <span class="kw">WHERE</span> <span class="co">is_active</span> <span class="op">=</span> <span class="nm">1</span>;
+
+<span class="cm">-- AND / OR / NOT</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="tb">products</span>
+<span class="kw">WHERE</span> <span class="co">price</span> <span class="op">></span> <span class="nm">100</span> <span class="kw">AND</span> <span class="co">stock_qty</span> <span class="op">></span> <span class="nm">0</span>;
+
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="tb">customers</span>
+<span class="kw">WHERE</span> <span class="co">country</span> <span class="op">=</span> <span class="st">'India'</span> <span class="kw">OR</span> <span class="co">country</span> <span class="op">=</span> <span class="st">'USA'</span>;
+
+<span class="cm">-- IN: match any value in a list</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="tb">products</span>
+<span class="kw">WHERE</span> <span class="co">category</span> <span class="kw">IN</span> (<span class="st">'electronics'</span>, <span class="st">'books'</span>);
+
+<span class="cm">-- BETWEEN: inclusive range</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="tb">products</span>
+<span class="kw">WHERE</span> <span class="co">price</span> <span class="kw">BETWEEN</span> <span class="nm">200</span> <span class="kw">AND</span> <span class="nm">1000</span>;
+
+<span class="cm">-- LIKE: pattern matching (% = any chars, _ = one char)</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="tb">customers</span>
+<span class="kw">WHERE</span> <span class="co">email</span> <span class="kw">LIKE</span> <span class="st">'%@gmail.com'</span>;
+
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="tb">customers</span>
+<span class="kw">WHERE</span> <span class="co">first_name</span> <span class="kw">LIKE</span> <span class="st">'A%'</span>;       <span class="cm">-- starts with A</span>
+
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="tb">customers</span>
+<span class="kw">WHERE</span> <span class="co">phone</span> <span class="kw">LIKE</span> <span class="st">'98_______'</span>;    <span class="cm">-- 10-digit starting 98</span>
+
+<span class="cm">-- IS NULL / IS NOT NULL</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="tb">customers</span> <span class="kw">WHERE</span> <span class="co">phone</span> <span class="kw">IS NULL</span>;
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="tb">customers</span> <span class="kw">WHERE</span> <span class="co">phone</span> <span class="kw">IS NOT NULL</span>;</pre></div>
+              </div>
+              <div class="note note-warn"><span class="note-icon">⚠️</span><span>Never use <code style="font-family:var(--mono)">= NULL</code> to check for nulls — it always returns false. Always use <code style="font-family:var(--mono)">IS NULL</code> or <code style="font-family:var(--mono)">IS NOT NULL</code>.</span></div>
+            </div>
+
+            <div id="d5-sort" class="tab-pane">
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">sql — DQL</span>
+                  <span class="code-label">ORDER BY, LIMIT, OFFSET</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content"><pre><span class="cm">-- ORDER BY: sort results (ASC = default, DESC = reverse)</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="tb">products</span>
+<span class="kw">ORDER BY</span> <span class="co">price</span> <span class="kw">ASC</span>;           <span class="cm">-- cheapest first</span>
+
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="tb">products</span>
+<span class="kw">ORDER BY</span> <span class="co">price</span> <span class="kw">DESC</span>;          <span class="cm">-- most expensive first</span>
+
+<span class="cm">-- Sort by multiple columns</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="tb">customers</span>
+<span class="kw">ORDER BY</span> <span class="co">last_name</span> <span class="kw">ASC</span>, <span class="co">first_name</span> <span class="kw">ASC</span>;
+
+<span class="cm">-- LIMIT: max rows to return</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="tb">products</span>
+<span class="kw">ORDER BY</span> <span class="co">price</span> <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> <span class="nm">5</span>;                       <span class="cm">-- top 5 most expensive</span>
+
+<span class="cm">-- LIMIT with OFFSET: pagination</span>
+<span class="cm">-- Page 1: rows 1–10</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="tb">products</span> <span class="kw">LIMIT</span> <span class="nm">10</span> <span class="kw">OFFSET</span> <span class="nm">0</span>;
+
+<span class="cm">-- Page 2: rows 11–20</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="tb">products</span> <span class="kw">LIMIT</span> <span class="nm">10</span> <span class="kw">OFFSET</span> <span class="nm">10</span>;
+
+<span class="cm">-- Page 3: rows 21–30</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="tb">products</span> <span class="kw">LIMIT</span> <span class="nm">10</span> <span class="kw">OFFSET</span> <span class="nm">20</span>;
+
+<span class="cm">-- Short form: LIMIT offset, count</span>
+<span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="tb">products</span> <span class="kw">LIMIT</span> <span class="nm">20</span>, <span class="nm">10</span>;  <span class="cm">-- skip 20, get next 10</span></pre></div>
+              </div>
+            </div>
+
+            <div id="d5-alias" class="tab-pane">
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">sql — DQL</span>
+                  <span class="code-label">Column aliases and DISTINCT</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content"><pre><span class="cm">-- Column alias with AS (renames output column)</span>
+<span class="kw">SELECT</span>
+  <span class="co">first_name</span>  <span class="kw">AS</span> <span class="co">fname</span>,
+  <span class="co">last_name</span>   <span class="kw">AS</span> <span class="co">lname</span>,
+  <span class="co">price</span> <span class="op">*</span> <span class="nm">1.18</span> <span class="kw">AS</span> <span class="co">price_with_gst</span>
+<span class="kw">FROM</span> <span class="tb">products</span>;
+
+<span class="cm">-- Table alias (shortens long table names)</span>
+<span class="kw">SELECT</span> p.<span class="co">name</span>, p.<span class="co">price</span>
+<span class="kw">FROM</span> <span class="tb">products</span> p;    <span class="cm">-- 'p' is the alias for products</span>
+
+<span class="cm">-- DISTINCT: remove duplicate values from results</span>
+<span class="kw">SELECT DISTINCT</span> <span class="co">category</span> <span class="kw">FROM</span> <span class="tb">products</span>;
+<span class="cm">-- Returns each unique category once</span>
+
+<span class="kw">SELECT DISTINCT</span> <span class="co">country</span>, <span class="co">department</span>
+<span class="kw">FROM</span> <span class="tb">employees</span>;
+<span class="cm">-- Unique combinations of country + department</span>
+
+<span class="cm">-- Count distinct values</span>
+<span class="kw">SELECT</span> <span class="fn">COUNT</span>(<span class="kw">DISTINCT</span> <span class="co">category</span>) <span class="kw">AS</span> <span class="co">total_categories</span>
+<span class="kw">FROM</span> <span class="tb">products</span>;</pre></div>
+              </div>
+              <div class="output-block">
+                <div class="output-header">Output — SELECT DISTINCT category FROM products</div>
+                <div class="output-content">
+                  <table class="result-table">
+                    <tr><th>category</th></tr>
+                    <tr><td>electronics</td></tr>
+                    <tr><td>clothing</td></tr>
+                    <tr><td>books</td></tr>
+                    <tr><td>food</td></tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== QUICK REFERENCE ===== -->
+        <div class="topic-card" id="quickref">
+          <div class="topic-card-header" onclick="toggleCard('quickref')">
+            <span class="topic-day-badge" style="background:rgba(16,185,129,0.15);color:#10b981;">REF</span>
+            <span class="topic-card-title">Week 1 Quick Reference — Command Cheatsheet</span>
+            <span class="topic-card-cat" style="background:rgba(16,185,129,0.1);color:#10b981;">Reference</span>
+            <span class="topic-chevron" id="chev-quickref">▶</span>
+          </div>
+          <div class="topic-card-body" id="body-quickref">
+            <p class="topic-desc">All the DDL and basic SELECT commands from Week 1 in one place for quick lookup.</p>
+            <div class="quick-ref-grid">
+              <div class="qr-item"><div class="qr-cmd">CREATE DATABASE db;</div><div class="qr-desc">Create a new database</div></div>
+              <div class="qr-item"><div class="qr-cmd">USE db;</div><div class="qr-desc">Switch to a database</div></div>
+              <div class="qr-item"><div class="qr-cmd">SHOW DATABASES;</div><div class="qr-desc">List all databases</div></div>
+              <div class="qr-item"><div class="qr-cmd">SHOW TABLES;</div><div class="qr-desc">List all tables in current db</div></div>
+              <div class="qr-item"><div class="qr-cmd">DESC table;</div><div class="qr-desc">Show table structure</div></div>
+              <div class="qr-item"><div class="qr-cmd">CREATE TABLE t (...);</div><div class="qr-desc">Create a new table</div></div>
+              <div class="qr-item"><div class="qr-cmd">ALTER TABLE t ADD col;</div><div class="qr-desc">Add a column</div></div>
+              <div class="qr-item"><div class="qr-cmd">ALTER TABLE t MODIFY col;</div><div class="qr-desc">Change column type</div></div>
+              <div class="qr-item"><div class="qr-cmd">ALTER TABLE t DROP col;</div><div class="qr-desc">Remove a column</div></div>
+              <div class="qr-item"><div class="qr-cmd">DROP TABLE IF EXISTS t;</div><div class="qr-desc">Safely delete a table</div></div>
+              <div class="qr-item"><div class="qr-cmd">TRUNCATE TABLE t;</div><div class="qr-desc">Empty a table (keeps structure)</div></div>
+              <div class="qr-item"><div class="qr-cmd">SELECT col FROM t;</div><div class="qr-desc">Basic query</div></div>
+              <div class="qr-item"><div class="qr-cmd">WHERE col = value;</div><div class="qr-desc">Filter rows</div></div>
+              <div class="qr-item"><div class="qr-cmd">ORDER BY col DESC;</div><div class="qr-desc">Sort results</div></div>
+              <div class="qr-item"><div class="qr-cmd">LIMIT n OFFSET m;</div><div class="qr-desc">Paginate results</div></div>
+              <div class="qr-item"><div class="qr-cmd">SELECT DISTINCT col;</div><div class="qr-desc">Remove duplicates</div></div>
+            </div>
+
+            <div style="margin-top: 1rem;">
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">sql — Full Practice Script</span>
+                  <span class="code-label">Week 1 end-to-end exercise — run this yourself!</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content"><pre><span class="cm">-- ================================================
+-- Week 1 Practice: Build a library database
+-- ================================================</span>
+
+<span class="kw">CREATE DATABASE IF NOT EXISTS</span> <span class="tb">library_db</span>
+  <span class="kw">CHARACTER SET</span> utf8mb4 <span class="kw">COLLATE</span> utf8mb4_unicode_ci;
+
+<span class="kw">USE</span> <span class="tb">library_db</span>;
+
+<span class="cm">-- Authors table</span>
+<span class="kw">CREATE TABLE</span> <span class="tb">authors</span> (
+  <span class="co">author_id</span>   <span class="dt">INT</span>          <span class="kw">AUTO_INCREMENT PRIMARY KEY</span>,
+  <span class="co">name</span>        <span class="dt">VARCHAR</span>(<span class="nm">100</span>) <span class="kw">NOT NULL</span>,
+  <span class="co">nationality</span> <span class="dt">VARCHAR</span>(<span class="nm">60</span>),
+  <span class="co">born_year</span>   <span class="dt">YEAR</span>,
+  <span class="co">is_alive</span>    <span class="dt">BOOLEAN</span>      <span class="kw">DEFAULT</span> <span class="nm">TRUE</span>
+);
+
+<span class="cm">-- Books table</span>
+<span class="kw">CREATE TABLE</span> <span class="tb">books</span> (
+  <span class="co">book_id</span>    <span class="dt">INT</span>              <span class="kw">AUTO_INCREMENT PRIMARY KEY</span>,
+  <span class="co">title</span>      <span class="dt">VARCHAR</span>(<span class="nm">200</span>)    <span class="kw">NOT NULL</span>,
+  <span class="co">isbn</span>       <span class="dt">CHAR</span>(<span class="nm">13</span>)        <span class="kw">UNIQUE</span>,
+  <span class="co">genre</span>      <span class="dt">ENUM</span>(<span class="st">'fiction'</span>, <span class="st">'non-fiction'</span>, <span class="st">'sci-fi'</span>, <span class="st">'history'</span>),
+  <span class="co">pages</span>      <span class="dt">SMALLINT</span>        <span class="kw">CHECK</span> (<span class="co">pages</span> <span class="op">></span> <span class="nm">0</span>),
+  <span class="co">price</span>      <span class="dt">DECIMAL</span>(<span class="nm">8</span>,<span class="nm">2</span>)   <span class="kw">NOT NULL</span>,
+  <span class="co">stock</span>      <span class="dt">INT</span>              <span class="kw">DEFAULT</span> <span class="nm">1</span>,
+  <span class="co">added_on</span>   <span class="dt">TIMESTAMP</span>        <span class="kw">DEFAULT</span> <span class="fn">CURRENT_TIMESTAMP</span>
+);
+
+<span class="cm">-- Verify structure</span>
+<span class="kw">DESCRIBE</span> <span class="tb">books</span>;
+
+<span class="cm">-- Add a column we forgot</span>
+<span class="kw">ALTER TABLE</span> <span class="tb">books</span>
+  <span class="kw">ADD COLUMN</span> <span class="co">language</span> <span class="dt">VARCHAR</span>(<span class="nm">30</span>) <span class="kw">DEFAULT</span> <span class="st">'English'</span> <span class="kw">AFTER</span> <span class="co">title</span>;
+
+<span class="cm">-- Now query it</span>
+<span class="kw">SELECT</span> <span class="co">title</span>, <span class="co">genre</span>, <span class="co">price</span>
+<span class="kw">FROM</span> <span class="tb">books</span>
+<span class="kw">WHERE</span> <span class="co">genre</span> <span class="op">=</span> <span class="st">'sci-fi'</span>
+  <span class="kw">AND</span> <span class="co">price</span> <span class="op"><</span> <span class="nm">500</span>
+<span class="kw">ORDER BY</span> <span class="co">price</span> <span class="kw">ASC</span>
+<span class="kw">LIMIT</span> <span class="nm">10</span>;</pre></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end topic-grid -->
+    </div><!-- end foundations -->
+
+    <!-- ===================== DIVIDER ===================== -->
+    <div class="section-divider">Intermediate — Weeks 2 through 6</div>
+
+    <!-- WEEK 2 — DML -->
+    <div id="dml">
+      <div class="section-header">
+        <div class="section-icon" style="background: rgba(16,185,129,0.12);">✏️</div>
+        <div>
+          <div class="section-title">Week 2 — DML: Data Manipulation</div>
+          <div class="section-desc">INSERT · UPDATE · DELETE · REPLACE · TRUNCATE</div>
+        </div>
+        <span class="section-badge" style="background:rgba(16,185,129,0.12);color:#10b981;">Week 2</span>
+      </div>
+      <div class="topic-grid">
+        <div class="topic-card" id="dml1">
+          <div class="topic-card-header" onclick="toggleCard('dml1')">
+            <span class="topic-day-badge" style="background:rgba(16,185,129,0.15);color:#10b981;">DML</span>
+            <span class="topic-card-title">INSERT — Adding Data to Tables</span>
+            <span class="topic-card-cat" style="background:rgba(16,185,129,0.1);color:#10b981;">Write</span>
+            <span class="topic-chevron" id="chev-dml1">▶</span>
+          </div>
+          <div class="topic-card-body" id="body-dml1">
+            <p class="topic-desc">INSERT statements add new rows to a table. You can insert a single row, multiple rows in one statement, or insert from a SELECT query.</p>
+            <div class="note note-tip"><span class="note-icon">💡</span><span>Always list columns explicitly — it makes your code resilient to future schema changes.</span></div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">sql — INSERT patterns</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+              <div class="code-content"><pre><span class="cm">-- Single row insert</span>
+<span class="kw">INSERT INTO</span> <span class="tb">users</span> (<span class="co">name</span>, <span class="co">email</span>, <span class="co">age</span>)
+<span class="kw">VALUES</span> (<span class="st">'Alice'</span>, <span class="st">'alice@example.com'</span>, <span class="nm">28</span>);
+
+<span class="cm">-- Multiple rows in one shot (faster than individual inserts)</span>
+<span class="kw">INSERT INTO</span> <span class="tb">products</span> (<span class="co">name</span>, <span class="co">price</span>, <span class="co">stock</span>)
+<span class="kw">VALUES</span>
+  (<span class="st">'Laptop'</span>,  <span class="nm">75000.00</span>, <span class="nm">10</span>),
+  (<span class="st">'Mouse'</span>,    <span class="nm">1200.00</span>, <span class="nm">50</span>),
+  (<span class="st">'Keyboard'</span>, <span class="nm">2500.00</span>, <span class="nm">30</span>);
+
+<span class="cm">-- Insert from a SELECT (copy rows between tables)</span>
+<span class="kw">INSERT INTO</span> <span class="tb">archive_orders</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="tb">orders</span>
+<span class="kw">WHERE</span> <span class="co">created_at</span> <span class="op">&lt;</span> <span class="st">'2024-01-01'</span>;
+
+<span class="cm">-- INSERT IGNORE — skip rows that cause duplicate-key errors</span>
+<span class="kw">INSERT IGNORE INTO</span> <span class="tb">users</span> (<span class="co">email</span>) <span class="kw">VALUES</span> (<span class="st">'bob@example.com'</span>);
+
+<span class="cm">-- ON DUPLICATE KEY UPDATE — upsert pattern</span>
+<span class="kw">INSERT INTO</span> <span class="tb">product_views</span> (<span class="co">product_id</span>, <span class="co">views</span>)
+<span class="kw">VALUES</span> (<span class="nm">42</span>, <span class="nm">1</span>)
+<span class="kw">ON DUPLICATE KEY UPDATE</span> <span class="co">views</span> <span class="op">=</span> <span class="co">views</span> <span class="op">+</span> <span class="nm">1</span>;</pre></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="topic-card" id="dml2">
+          <div class="topic-card-header" onclick="toggleCard('dml2')">
+            <span class="topic-day-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;">DML</span>
+            <span class="topic-card-title">UPDATE & DELETE — Modifying and Removing Data</span>
+            <span class="topic-card-cat" style="background:rgba(245,158,11,0.1);color:#f59e0b;">Modify</span>
+            <span class="topic-chevron" id="chev-dml2">▶</span>
+          </div>
+          <div class="topic-card-body" id="body-dml2">
+            <p class="topic-desc">UPDATE changes existing rows. DELETE removes rows. Both MUST use a WHERE clause in production — without one, every row is affected.</p>
+            <div class="note note-warn"><span class="note-icon">⚠️</span><span>Always test your WHERE clause with a SELECT first before running UPDATE or DELETE. Use transactions to protect yourself.</span></div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">sql — UPDATE & DELETE</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+              <div class="code-content"><pre><span class="cm">-- Update a single column for one row</span>
+<span class="kw">UPDATE</span> <span class="tb">users</span>
+<span class="kw">SET</span> <span class="co">email</span> <span class="op">=</span> <span class="st">'newemail@example.com'</span>
+<span class="kw">WHERE</span> <span class="co">user_id</span> <span class="op">=</span> <span class="nm">5</span>;
+
+<span class="cm">-- Update multiple columns</span>
+<span class="kw">UPDATE</span> <span class="tb">products</span>
+<span class="kw">SET</span> <span class="co">price</span> <span class="op">=</span> <span class="co">price</span> <span class="op">*</span> <span class="nm">1.10</span>,
+    <span class="co">updated_at</span> <span class="op">=</span> <span class="fn">NOW</span>()
+<span class="kw">WHERE</span> <span class="co">category</span> <span class="op">=</span> <span class="st">'electronics'</span>;
+
+<span class="cm">-- Safe delete pattern: test first</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="tb">orders</span> <span class="kw">WHERE</span> <span class="co">status</span> <span class="op">=</span> <span class="st">'cancelled'</span>;
+<span class="cm">-- Then delete</span>
+<span class="kw">DELETE FROM</span> <span class="tb">orders</span> <span class="kw">WHERE</span> <span class="co">status</span> <span class="op">=</span> <span class="st">'cancelled'</span>;
+
+<span class="cm">-- DELETE with LIMIT (useful for large batch deletions)</span>
+<span class="kw">DELETE FROM</span> <span class="tb">logs</span>
+<span class="kw">WHERE</span> <span class="co">created_at</span> <span class="op">&lt;</span> <span class="st">'2023-01-01'</span>
+<span class="kw">LIMIT</span> <span class="nm">1000</span>;
+
+<span class="cm">-- TRUNCATE: wipe all rows, reset AUTO_INCREMENT (no rollback!)</span>
+<span class="kw">TRUNCATE TABLE</span> <span class="tb">temp_data</span>;</pre></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEEK 3 — JOINS -->
+    <div id="joins" style="margin-top:2.5rem;">
+      <div class="section-header">
+        <div class="section-icon" style="background: rgba(124,58,237,0.12);">🔗</div>
+        <div>
+          <div class="section-title">Week 3 — Joins & Relationships</div>
+          <div class="section-desc">INNER · LEFT · RIGHT · FULL · SELF · CROSS joins · Foreign Keys</div>
+        </div>
+        <span class="section-badge" style="background:rgba(124,58,237,0.12);color:#7c3aed;">Week 3</span>
+      </div>
+      <div class="topic-grid">
+        <div class="topic-card" id="joins1">
+          <div class="topic-card-header" onclick="toggleCard('joins1')">
+            <span class="topic-day-badge" style="background:rgba(124,58,237,0.15);color:#7c3aed;">JOIN</span>
+            <span class="topic-card-title">Foreign Keys & Table Relationships</span>
+            <span class="topic-card-cat" style="background:rgba(124,58,237,0.1);color:#7c3aed;">Schema</span>
+            <span class="topic-chevron" id="chev-joins1">▶</span>
+          </div>
+          <div class="topic-card-body" id="body-joins1">
+            <p class="topic-desc">A Foreign Key (FK) links a column in one table to the PRIMARY KEY of another, enforcing referential integrity — you cannot insert a child row that has no parent.</p>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">sql — Foreign Keys</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+              <div class="code-content"><pre><span class="kw">CREATE TABLE</span> <span class="tb">customers</span> (
+  <span class="co">customer_id</span> <span class="dt">INT</span> <span class="kw">AUTO_INCREMENT PRIMARY KEY</span>,
+  <span class="co">name</span>        <span class="dt">VARCHAR</span>(<span class="nm">100</span>) <span class="kw">NOT NULL</span>,
+  <span class="co">email</span>       <span class="dt">VARCHAR</span>(<span class="nm">150</span>) <span class="kw">UNIQUE NOT NULL</span>
+);
+
+<span class="kw">CREATE TABLE</span> <span class="tb">orders</span> (
+  <span class="co">order_id</span>    <span class="dt">INT</span> <span class="kw">AUTO_INCREMENT PRIMARY KEY</span>,
+  <span class="co">customer_id</span> <span class="dt">INT</span> <span class="kw">NOT NULL</span>,
+  <span class="co">total</span>       <span class="dt">DECIMAL</span>(<span class="nm">10</span>,<span class="nm">2</span>),
+  <span class="co">order_date</span>  <span class="dt">DATE</span>,
+  <span class="kw">FOREIGN KEY</span> (<span class="co">customer_id</span>)
+    <span class="kw">REFERENCES</span> <span class="tb">customers</span>(<span class="co">customer_id</span>)
+    <span class="kw">ON DELETE CASCADE</span>       <span class="cm">-- deleting a customer removes their orders</span>
+    <span class="kw">ON UPDATE CASCADE</span>
+);</pre></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="topic-card" id="joins2">
+          <div class="topic-card-header" onclick="toggleCard('joins2')">
+            <span class="topic-day-badge" style="background:rgba(124,58,237,0.15);color:#7c3aed;">JOIN</span>
+            <span class="topic-card-title">All JOIN Types with Examples</span>
+            <span class="topic-card-cat" style="background:rgba(124,58,237,0.1);color:#7c3aed;">Query</span>
+            <span class="topic-chevron" id="chev-joins2">▶</span>
+          </div>
+          <div class="topic-card-body" id="body-joins2">
+            <p class="topic-desc">Joins combine rows from two or more tables based on a related column. Each join type returns a different subset of matching/non-matching rows.</p>
+            <div class="note note-info"><span class="note-icon">ℹ️</span><span><strong>INNER JOIN</strong> = only matching rows. <strong>LEFT JOIN</strong> = all from left + matches from right (NULLs where no match). <strong>RIGHT JOIN</strong> = inverse of LEFT.</span></div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">sql — JOIN types</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+              <div class="code-content"><pre><span class="cm">-- INNER JOIN: only rows with a match in both tables</span>
+<span class="kw">SELECT</span> <span class="co">c.name</span>, <span class="co">o.order_id</span>, <span class="co">o.total</span>
+<span class="kw">FROM</span> <span class="tb">customers</span> <span class="co">c</span>
+<span class="kw">INNER JOIN</span> <span class="tb">orders</span> <span class="co">o</span> <span class="kw">ON</span> <span class="co">c.customer_id</span> <span class="op">=</span> <span class="co">o.customer_id</span>;
+
+<span class="cm">-- LEFT JOIN: all customers, even those with no orders (NULL)</span>
+<span class="kw">SELECT</span> <span class="co">c.name</span>, <span class="co">o.order_id</span>
+<span class="kw">FROM</span> <span class="tb">customers</span> <span class="co">c</span>
+<span class="kw">LEFT JOIN</span> <span class="tb">orders</span> <span class="co">o</span> <span class="kw">ON</span> <span class="co">c.customer_id</span> <span class="op">=</span> <span class="co">o.customer_id</span>;
+
+<span class="cm">-- Find customers with NO orders (anti-join)</span>
+<span class="kw">SELECT</span> <span class="co">c.name</span>
+<span class="kw">FROM</span> <span class="tb">customers</span> <span class="co">c</span>
+<span class="kw">LEFT JOIN</span> <span class="tb">orders</span> <span class="co">o</span> <span class="kw">ON</span> <span class="co">c.customer_id</span> <span class="op">=</span> <span class="co">o.customer_id</span>
+<span class="kw">WHERE</span> <span class="co">o.order_id</span> <span class="kw">IS NULL</span>;
+
+<span class="cm">-- SELF JOIN: employees and their managers (same table)</span>
+<span class="kw">SELECT</span> <span class="co">e.name</span> <span class="kw">AS</span> employee, <span class="co">m.name</span> <span class="kw">AS</span> manager
+<span class="kw">FROM</span> <span class="tb">employees</span> <span class="co">e</span>
+<span class="kw">LEFT JOIN</span> <span class="tb">employees</span> <span class="co">m</span> <span class="kw">ON</span> <span class="co">e.manager_id</span> <span class="op">=</span> <span class="co">m.employee_id</span>;
+
+<span class="cm">-- Multi-table join</span>
+<span class="kw">SELECT</span> <span class="co">c.name</span>, <span class="co">p.name</span> <span class="kw">AS</span> product, <span class="co">oi.quantity</span>
+<span class="kw">FROM</span> <span class="tb">customers</span> <span class="co">c</span>
+<span class="kw">JOIN</span> <span class="tb">orders</span> <span class="co">o</span>      <span class="kw">ON</span> <span class="co">c.customer_id</span> <span class="op">=</span> <span class="co">o.customer_id</span>
+<span class="kw">JOIN</span> <span class="tb">order_items</span> <span class="co">oi</span> <span class="kw">ON</span> <span class="co">o.order_id</span>    <span class="op">=</span> <span class="co">oi.order_id</span>
+<span class="kw">JOIN</span> <span class="tb">products</span> <span class="co">p</span>     <span class="kw">ON</span> <span class="co">oi.product_id</span> <span class="op">=</span> <span class="co">p.product_id</span>;</pre></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEEK 4 — FUNCTIONS -->
+    <div id="functions" style="margin-top:2.5rem;">
+      <div class="section-header">
+        <div class="section-icon" style="background: rgba(245,158,11,0.12);">🔢</div>
+        <div>
+          <div class="section-title">Week 4 — Functions & Aggregation</div>
+          <div class="section-desc">GROUP BY · HAVING · Aggregate · String · Date Functions</div>
+        </div>
+        <span class="section-badge" style="background:rgba(245,158,11,0.12);color:#f59e0b;">Week 4</span>
+      </div>
+      <div class="topic-grid">
+        <div class="topic-card" id="agg1">
+          <div class="topic-card-header" onclick="toggleCard('agg1')">
+            <span class="topic-day-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;">AGG</span>
+            <span class="topic-card-title">GROUP BY, HAVING & Aggregate Functions</span>
+            <span class="topic-card-cat" style="background:rgba(245,158,11,0.1);color:#f59e0b;">Analytics</span>
+            <span class="topic-chevron" id="chev-agg1">▶</span>
+          </div>
+          <div class="topic-card-body" id="body-agg1">
+            <p class="topic-desc">Aggregate functions collapse many rows into a single value. GROUP BY groups rows that share a value; HAVING filters groups (like WHERE but for grouped results).</p>
+            <div class="note note-tip"><span class="note-icon">💡</span><span>Rule: every column in SELECT that is not inside an aggregate function MUST appear in GROUP BY.</span></div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">sql — Aggregate functions</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+              <div class="code-content"><pre><span class="cm">-- Basic aggregates</span>
+<span class="kw">SELECT</span>
+  <span class="fn">COUNT</span>(*),                         <span class="cm">-- total rows</span>
+  <span class="fn">COUNT</span>(<span class="kw">DISTINCT</span> <span class="co">customer_id</span>),      <span class="cm">-- unique customers</span>
+  <span class="fn">SUM</span>(<span class="co">total</span>),                        <span class="cm">-- sum of totals</span>
+  <span class="fn">AVG</span>(<span class="co">total</span>),                        <span class="cm">-- average order value</span>
+  <span class="fn">MIN</span>(<span class="co">total</span>), <span class="fn">MAX</span>(<span class="co">total</span>)            <span class="cm">-- min and max</span>
+<span class="kw">FROM</span> <span class="tb">orders</span>;
+
+<span class="cm">-- GROUP BY: sales by category</span>
+<span class="kw">SELECT</span> <span class="co">category</span>, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> items, <span class="fn">SUM</span>(<span class="co">price</span>) <span class="kw">AS</span> total_value
+<span class="kw">FROM</span> <span class="tb">products</span>
+<span class="kw">GROUP BY</span> <span class="co">category</span>;
+
+<span class="cm">-- HAVING: only categories with more than 5 products</span>
+<span class="kw">SELECT</span> <span class="co">category</span>, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> cnt
+<span class="kw">FROM</span> <span class="tb">products</span>
+<span class="kw">GROUP BY</span> <span class="co">category</span>
+<span class="kw">HAVING</span> <span class="fn">COUNT</span>(*) <span class="op">&gt;</span> <span class="nm">5</span>
+<span class="kw">ORDER BY</span> cnt <span class="kw">DESC</span>;
+
+<span class="cm">-- String functions</span>
+<span class="kw">SELECT</span>
+  <span class="fn">UPPER</span>(<span class="co">name</span>),
+  <span class="fn">LOWER</span>(<span class="co">email</span>),
+  <span class="fn">LENGTH</span>(<span class="co">name</span>),
+  <span class="fn">CONCAT</span>(<span class="co">first_name</span>, <span class="st">' '</span>, <span class="co">last_name</span>) <span class="kw">AS</span> full_name,
+  <span class="fn">SUBSTRING</span>(<span class="co">phone</span>, <span class="nm">1</span>, <span class="nm">3</span>) <span class="kw">AS</span> area_code,
+  <span class="fn">TRIM</span>(<span class="co">description</span>)
+<span class="kw">FROM</span> <span class="tb">users</span>;
+
+<span class="cm">-- Date functions</span>
+<span class="kw">SELECT</span>
+  <span class="fn">NOW</span>(),
+  <span class="fn">CURDATE</span>(),
+  <span class="fn">YEAR</span>(<span class="co">created_at</span>),
+  <span class="fn">MONTH</span>(<span class="co">created_at</span>),
+  <span class="fn">DATEDIFF</span>(<span class="fn">NOW</span>(), <span class="co">created_at</span>) <span class="kw">AS</span> days_old,
+  <span class="fn">DATE_FORMAT</span>(<span class="co">created_at</span>, <span class="st">'%d %M %Y'</span>) <span class="kw">AS</span> pretty_date
+<span class="kw">FROM</span> <span class="tb">orders</span>;</pre></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEEK 5 — INDEXES -->
+    <div id="indexes" style="margin-top:2.5rem;">
+      <div class="section-header">
+        <div class="section-icon" style="background: rgba(239,68,68,0.12);">⚡</div>
+        <div>
+          <div class="section-title">Week 5 — Indexes & Performance</div>
+          <div class="section-desc">B-Tree Indexes · Composite · EXPLAIN · Query Optimization</div>
+        </div>
+        <span class="section-badge" style="background:rgba(239,68,68,0.12);color:#ef4444;">Week 5</span>
+      </div>
+      <div class="topic-grid">
+        <div class="topic-card" id="idx1">
+          <div class="topic-card-header" onclick="toggleCard('idx1')">
+            <span class="topic-day-badge" style="background:rgba(239,68,68,0.15);color:#ef4444;">IDX</span>
+            <span class="topic-card-title">Creating & Using Indexes</span>
+            <span class="topic-card-cat" style="background:rgba(239,68,68,0.1);color:#ef4444;">Performance</span>
+            <span class="topic-chevron" id="chev-idx1">▶</span>
+          </div>
+          <div class="topic-card-body" id="body-idx1">
+            <p class="topic-desc">An index is a data structure (B-Tree by default) that MySQL builds to speed up lookups. Without indexes, MySQL scans every row (full table scan). With them, it jumps straight to the result.</p>
+            <div class="note note-warn"><span class="note-icon">⚠️</span><span>Indexes speed up reads but slow down writes (INSERT/UPDATE/DELETE). Don't over-index — index columns you frequently filter, sort, or join on.</span></div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">sql — Indexes</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+              <div class="code-content"><pre><span class="cm">-- Create a simple index</span>
+<span class="kw">CREATE INDEX</span> idx_email <span class="kw">ON</span> <span class="tb">users</span>(<span class="co">email</span>);
+
+<span class="cm">-- Unique index (enforces uniqueness + speeds lookups)</span>
+<span class="kw">CREATE UNIQUE INDEX</span> idx_username <span class="kw">ON</span> <span class="tb">users</span>(<span class="co">username</span>);
+
+<span class="cm">-- Composite index (covers queries filtering on both columns)</span>
+<span class="kw">CREATE INDEX</span> idx_cat_price <span class="kw">ON</span> <span class="tb">products</span>(<span class="co">category</span>, <span class="co">price</span>);
+
+<span class="cm">-- List all indexes on a table</span>
+<span class="kw">SHOW INDEX FROM</span> <span class="tb">users</span>;
+
+<span class="cm">-- EXPLAIN: see how MySQL executes a query</span>
+<span class="kw">EXPLAIN SELECT</span> * <span class="kw">FROM</span> <span class="tb">orders</span>
+<span class="kw">WHERE</span> <span class="co">customer_id</span> <span class="op">=</span> <span class="nm">42</span>
+  <span class="kw">AND</span> <span class="co">status</span> <span class="op">=</span> <span class="st">'shipped'</span>;
+<span class="cm">-- Look at 'type' column: ref/range = good, ALL = full scan (needs index)</span>
+
+<span class="cm">-- Drop an index</span>
+<span class="kw">DROP INDEX</span> idx_email <span class="kw">ON</span> <span class="tb">users</span>;</pre></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEEK 6 — TRANSACTIONS -->
+    <div id="transactions" style="margin-top:2.5rem;">
+      <div class="section-header">
+        <div class="section-icon" style="background: rgba(236,72,153,0.12);">🔄</div>
+        <div>
+          <div class="section-title">Week 6 — Transactions & ACID</div>
+          <div class="section-desc">BEGIN · COMMIT · ROLLBACK · SAVEPOINT · Isolation Levels</div>
+        </div>
+        <span class="section-badge" style="background:rgba(236,72,153,0.12);color:#ec4899;">Week 6</span>
+      </div>
+      <div class="topic-grid">
+        <div class="topic-card" id="txn1">
+          <div class="topic-card-header" onclick="toggleCard('txn1')">
+            <span class="topic-day-badge" style="background:rgba(236,72,153,0.15);color:#ec4899;">TXN</span>
+            <span class="topic-card-title">Transactions — ACID Guarantees</span>
+            <span class="topic-card-cat" style="background:rgba(236,72,153,0.1);color:#ec4899;">Safety</span>
+            <span class="topic-chevron" id="chev-txn1">▶</span>
+          </div>
+          <div class="topic-card-body" id="body-txn1">
+            <p class="topic-desc">A transaction groups multiple SQL statements into a single all-or-nothing unit. ACID stands for Atomicity, Consistency, Isolation, Durability — the four properties that guarantee data integrity.</p>
+            <div class="note note-info"><span class="note-icon">ℹ️</span><span><strong>Atomicity</strong>: all or nothing. <strong>Consistency</strong>: DB moves from valid state to valid state. <strong>Isolation</strong>: concurrent transactions don't interfere. <strong>Durability</strong>: committed data survives crashes.</span></div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">sql — Transactions</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+              <div class="code-content"><pre><span class="cm">-- Classic bank transfer example</span>
+<span class="kw">START TRANSACTION</span>;
+
+<span class="kw">UPDATE</span> <span class="tb">accounts</span>
+  <span class="kw">SET</span> <span class="co">balance</span> <span class="op">=</span> <span class="co">balance</span> <span class="op">-</span> <span class="nm">500</span>
+  <span class="kw">WHERE</span> <span class="co">account_id</span> <span class="op">=</span> <span class="nm">1</span>;   <span class="cm">-- debit sender</span>
+
+<span class="kw">UPDATE</span> <span class="tb">accounts</span>
+  <span class="kw">SET</span> <span class="co">balance</span> <span class="op">=</span> <span class="co">balance</span> <span class="op">+</span> <span class="nm">500</span>
+  <span class="kw">WHERE</span> <span class="co">account_id</span> <span class="op">=</span> <span class="nm">2</span>;   <span class="cm">-- credit receiver</span>
+
+<span class="cm">-- If everything is OK:</span>
+<span class="kw">COMMIT</span>;
+
+<span class="cm">-- If something went wrong, undo everything:</span>
+<span class="kw">ROLLBACK</span>;
+
+<span class="cm">-- SAVEPOINT: partial rollbacks</span>
+<span class="kw">START TRANSACTION</span>;
+<span class="kw">INSERT INTO</span> <span class="tb">orders</span> (<span class="co">customer_id</span>, <span class="co">total</span>) <span class="kw">VALUES</span> (<span class="nm">1</span>, <span class="nm">200</span>);
+<span class="kw">SAVEPOINT</span> after_order;
+
+<span class="kw">INSERT INTO</span> <span class="tb">order_items</span> (<span class="co">order_id</span>, <span class="co">product_id</span>) <span class="kw">VALUES</span> (<span class="fn">LAST_INSERT_ID</span>(), <span class="nm">99</span>);
+<span class="cm">-- Item failed? Roll back only the item</span>
+<span class="kw">ROLLBACK TO</span> after_order;
+<span class="kw">COMMIT</span>;</pre></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== DIVIDER ===================== -->
+    <div class="section-divider">Advanced — Weeks 7 & 8</div>
+
+    <!-- WEEK 7 — SECURITY & CTEs -->
+    <div id="advanced" style="margin-top:0;">
+      <div class="section-header">
+        <div class="section-icon" style="background: rgba(124,58,237,0.12);">🛡️</div>
+        <div>
+          <div class="section-title">Week 7 — CTEs, Subqueries & Security</div>
+          <div class="section-desc">WITH clauses · Subqueries · Views · User Privileges</div>
+        </div>
+        <span class="section-badge" style="background:rgba(124,58,237,0.12);color:#7c3aed;">Week 7</span>
+      </div>
+      <div class="topic-grid">
+        <div class="topic-card" id="cte1">
+          <div class="topic-card-header" onclick="toggleCard('cte1')">
+            <span class="topic-day-badge" style="background:rgba(124,58,237,0.15);color:#7c3aed;">CTE</span>
+            <span class="topic-card-title">CTEs (WITH clause) & Subqueries</span>
+            <span class="topic-card-cat" style="background:rgba(124,58,237,0.1);color:#7c3aed;">Advanced SQL</span>
+            <span class="topic-chevron" id="chev-cte1">▶</span>
+          </div>
+          <div class="topic-card-body" id="body-cte1">
+            <p class="topic-desc">A CTE (Common Table Expression) is a named temporary result set defined with WITH. It makes complex queries readable and avoids repeating subquery logic. Recursive CTEs can traverse hierarchical data.</p>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">sql — CTEs & Subqueries</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+              <div class="code-content"><pre><span class="cm">-- Basic CTE: top customers by spend</span>
+<span class="kw">WITH</span> customer_totals <span class="kw">AS</span> (
+  <span class="kw">SELECT</span> <span class="co">customer_id</span>, <span class="fn">SUM</span>(<span class="co">total</span>) <span class="kw">AS</span> lifetime_value
+  <span class="kw">FROM</span> <span class="tb">orders</span>
+  <span class="kw">GROUP BY</span> <span class="co">customer_id</span>
+)
+<span class="kw">SELECT</span> <span class="co">c.name</span>, <span class="co">ct.lifetime_value</span>
+<span class="kw">FROM</span> <span class="tb">customers</span> <span class="co">c</span>
+<span class="kw">JOIN</span> customer_totals <span class="co">ct</span> <span class="kw">ON</span> <span class="co">c.customer_id</span> <span class="op">=</span> <span class="co">ct.customer_id</span>
+<span class="kw">ORDER BY</span> <span class="co">ct.lifetime_value</span> <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> <span class="nm">10</span>;
+
+<span class="cm">-- Recursive CTE: walk an employee hierarchy</span>
+<span class="kw">WITH RECURSIVE</span> org_chart <span class="kw">AS</span> (
+  <span class="cm">-- Anchor: start with the CEO (no manager)</span>
+  <span class="kw">SELECT</span> <span class="co">employee_id</span>, <span class="co">name</span>, <span class="co">manager_id</span>, <span class="nm">0</span> <span class="kw">AS</span> level
+  <span class="kw">FROM</span> <span class="tb">employees</span>
+  <span class="kw">WHERE</span> <span class="co">manager_id</span> <span class="kw">IS NULL</span>
+  <span class="kw">UNION ALL</span>
+  <span class="cm">-- Recursive: join to find each person's reports</span>
+  <span class="kw">SELECT</span> <span class="co">e.employee_id</span>, <span class="co">e.name</span>, <span class="co">e.manager_id</span>, <span class="co">oc.level</span> <span class="op">+</span> <span class="nm">1</span>
+  <span class="kw">FROM</span> <span class="tb">employees</span> <span class="co">e</span>
+  <span class="kw">JOIN</span> org_chart <span class="co">oc</span> <span class="kw">ON</span> <span class="co">e.manager_id</span> <span class="op">=</span> <span class="co">oc.employee_id</span>
+)
+<span class="kw">SELECT</span> <span class="fn">REPEAT</span>(<span class="st">'  '</span>, level), name, level
+<span class="kw">FROM</span> org_chart;
+
+<span class="cm">-- Correlated subquery: products priced above their category average</span>
+<span class="kw">SELECT</span> <span class="co">name</span>, <span class="co">price</span>, <span class="co">category</span>
+<span class="kw">FROM</span> <span class="tb">products</span> <span class="co">p</span>
+<span class="kw">WHERE</span> <span class="co">price</span> <span class="op">&gt;</span> (
+  <span class="kw">SELECT</span> <span class="fn">AVG</span>(<span class="co">price</span>)
+  <span class="kw">FROM</span> <span class="tb">products</span>
+  <span class="kw">WHERE</span> <span class="co">category</span> <span class="op">=</span> <span class="co">p.category</span>
+);</pre></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="topic-card" id="views1">
+          <div class="topic-card-header" onclick="toggleCard('views1')">
+            <span class="topic-day-badge" style="background:rgba(124,58,237,0.15);color:#7c3aed;">VIEW</span>
+            <span class="topic-card-title">Views & User Privileges</span>
+            <span class="topic-card-cat" style="background:rgba(124,58,237,0.1);color:#7c3aed;">Security</span>
+            <span class="topic-chevron" id="chev-views1">▶</span>
+          </div>
+          <div class="topic-card-body" id="body-views1">
+            <p class="topic-desc">A VIEW is a stored SELECT statement that acts like a virtual table. Use views to simplify complex queries, abstract schema changes, and control what data users can see.</p>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">sql — Views & Privileges</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+              <div class="code-content"><pre><span class="cm">-- Create a view (hides sensitive columns)</span>
+<span class="kw">CREATE VIEW</span> <span class="tb">public_users</span> <span class="kw">AS</span>
+  <span class="kw">SELECT</span> <span class="co">user_id</span>, <span class="co">username</span>, <span class="co">created_at</span>
+  <span class="kw">FROM</span> <span class="tb">users</span>
+  <span class="kw">WHERE</span> <span class="co">is_active</span> <span class="op">=</span> <span class="nm">TRUE</span>;
+
+<span class="cm">-- Query the view just like a table</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="tb">public_users</span>;
+
+<span class="cm">-- Update a view</span>
+<span class="kw">CREATE OR REPLACE VIEW</span> <span class="tb">public_users</span> <span class="kw">AS</span>
+  <span class="kw">SELECT</span> <span class="co">user_id</span>, <span class="co">username</span>, <span class="co">email</span>, <span class="co">created_at</span>
+  <span class="kw">FROM</span> <span class="tb">users</span> <span class="kw">WHERE</span> <span class="co">is_active</span> <span class="op">=</span> <span class="nm">TRUE</span>;
+
+<span class="cm">-- User management & privileges</span>
+<span class="kw">CREATE USER</span> <span class="st">'app_user'</span><span class="op">@</span><span class="st">'localhost'</span> <span class="kw">IDENTIFIED BY</span> <span class="st">'StrongPass!1'</span>;
+
+<span class="cm">-- Grant read-only access to one database</span>
+<span class="kw">GRANT SELECT ON</span> <span class="tb">myapp</span>.* <span class="kw">TO</span> <span class="st">'app_user'</span><span class="op">@</span><span class="st">'localhost'</span>;
+
+<span class="cm">-- Grant write access to a specific table only</span>
+<span class="kw">GRANT INSERT, UPDATE ON</span> <span class="tb">myapp</span>.<span class="tb">orders</span> <span class="kw">TO</span> <span class="st">'app_user'</span><span class="op">@</span><span class="st">'localhost'</span>;
+
+<span class="kw">FLUSH PRIVILEGES</span>;
+<span class="kw">SHOW GRANTS FOR</span> <span class="st">'app_user'</span><span class="op">@</span><span class="st">'localhost'</span>;</pre></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEEK 8 — EXPERT TOPICS -->
+    <div id="expert" style="margin-top:2.5rem;">
+      <div class="section-header">
+        <div class="section-icon" style="background: rgba(6,182,212,0.12);">🚀</div>
+        <div>
+          <div class="section-title">Week 8 — Window Functions, JSON & Stored Procedures</div>
+          <div class="section-desc">OVER · PARTITION BY · JSON columns · Stored Procedures · Triggers</div>
+        </div>
+        <span class="section-badge" style="background:rgba(6,182,212,0.12);color:#06b6d4;">Week 8</span>
+      </div>
+      <div class="topic-grid">
+        <div class="topic-card" id="win1">
+          <div class="topic-card-header" onclick="toggleCard('win1')">
+            <span class="topic-day-badge" style="background:rgba(6,182,212,0.15);color:#06b6d4;">WIN</span>
+            <span class="topic-card-title">Window Functions — OVER, PARTITION BY, RANK</span>
+            <span class="topic-card-cat" style="background:rgba(6,182,212,0.1);color:#06b6d4;">Expert</span>
+            <span class="topic-chevron" id="chev-win1">▶</span>
+          </div>
+          <div class="topic-card-body" id="body-win1">
+            <p class="topic-desc">Window functions perform calculations across a set of rows related to the current row — without collapsing them like GROUP BY. They're the key to advanced analytics queries.</p>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">sql — Window Functions</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+              <div class="code-content"><pre><span class="cm">-- ROW_NUMBER: rank orders within each customer</span>
+<span class="kw">SELECT</span>
+  <span class="co">customer_id</span>, <span class="co">order_id</span>, <span class="co">total</span>,
+  <span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span> (
+    <span class="kw">PARTITION BY</span> <span class="co">customer_id</span>
+    <span class="kw">ORDER BY</span> <span class="co">order_date</span> <span class="kw">DESC</span>
+  ) <span class="kw">AS</span> order_rank
+<span class="kw">FROM</span> <span class="tb">orders</span>;
+
+<span class="cm">-- Get only the most recent order per customer</span>
+<span class="kw">WITH</span> ranked <span class="kw">AS</span> (
+  <span class="kw">SELECT</span> *, <span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> <span class="co">customer_id</span> <span class="kw">ORDER BY</span> <span class="co">order_date</span> <span class="kw">DESC</span>) <span class="kw">AS</span> rn
+  <span class="kw">FROM</span> <span class="tb">orders</span>
+)
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> ranked <span class="kw">WHERE</span> rn <span class="op">=</span> <span class="nm">1</span>;
+
+<span class="cm">-- Running total (cumulative SUM)</span>
+<span class="kw">SELECT</span>
+  <span class="co">order_date</span>, <span class="co">total</span>,
+  <span class="fn">SUM</span>(<span class="co">total</span>) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> <span class="co">order_date</span>) <span class="kw">AS</span> running_total
+<span class="kw">FROM</span> <span class="tb">orders</span>;
+
+<span class="cm">-- RANK vs DENSE_RANK</span>
+<span class="kw">SELECT</span> <span class="co">name</span>, <span class="co">score</span>,
+  <span class="fn">RANK</span>()       <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> <span class="co">score</span> <span class="kw">DESC</span>) <span class="kw">AS</span> rank_with_gaps,
+  <span class="fn">DENSE_RANK</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> <span class="co">score</span> <span class="kw">DESC</span>) <span class="kw">AS</span> dense_rank
+<span class="kw">FROM</span> <span class="tb">leaderboard</span>;</pre></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="topic-card" id="proc1">
+          <div class="topic-card-header" onclick="toggleCard('proc1')">
+            <span class="topic-day-badge" style="background:rgba(6,182,212,0.15);color:#06b6d4;">PROC</span>
+            <span class="topic-card-title">Stored Procedures, Functions & Triggers</span>
+            <span class="topic-card-cat" style="background:rgba(6,182,212,0.1);color:#06b6d4;">Expert</span>
+            <span class="topic-chevron" id="chev-proc1">▶</span>
+          </div>
+          <div class="topic-card-body" id="body-proc1">
+            <p class="topic-desc">Stored procedures are reusable SQL programs stored in the database. Triggers fire automatically on INSERT/UPDATE/DELETE events. Both keep business logic inside the DB layer.</p>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">sql — Stored Procedure & Trigger</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+              <div class="code-content"><pre><span class="kw">DELIMITER</span> //
+
+<span class="cm">-- Stored Procedure: place an order with stock check</span>
+<span class="kw">CREATE PROCEDURE</span> <span class="fn">PlaceOrder</span>(
+  <span class="kw">IN</span>  p_customer_id <span class="dt">INT</span>,
+  <span class="kw">IN</span>  p_product_id  <span class="dt">INT</span>,
+  <span class="kw">IN</span>  p_qty         <span class="dt">INT</span>,
+  <span class="kw">OUT</span> p_order_id    <span class="dt">INT</span>
+)
+<span class="kw">BEGIN</span>
+  <span class="kw">DECLARE</span> v_stock <span class="dt">INT</span>;
+  <span class="kw">SELECT</span> <span class="co">stock</span> <span class="kw">INTO</span> v_stock <span class="kw">FROM</span> <span class="tb">products</span> <span class="kw">WHERE</span> <span class="co">product_id</span> <span class="op">=</span> p_product_id;
+
+  <span class="kw">IF</span> v_stock <span class="op">&lt;</span> p_qty <span class="kw">THEN</span>
+    <span class="kw">SIGNAL SQLSTATE</span> <span class="st">'45000'</span> <span class="kw">SET MESSAGE_TEXT</span> <span class="op">=</span> <span class="st">'Insufficient stock'</span>;
+  <span class="kw">END IF</span>;
+
+  <span class="kw">START TRANSACTION</span>;
+    <span class="kw">INSERT INTO</span> <span class="tb">orders</span> (<span class="co">customer_id</span>) <span class="kw">VALUES</span> (p_customer_id);
+    <span class="kw">SET</span> p_order_id <span class="op">=</span> <span class="fn">LAST_INSERT_ID</span>();
+    <span class="kw">UPDATE</span> <span class="tb">products</span> <span class="kw">SET</span> <span class="co">stock</span> <span class="op">=</span> <span class="co">stock</span> <span class="op">-</span> p_qty <span class="kw">WHERE</span> <span class="co">product_id</span> <span class="op">=</span> p_product_id;
+  <span class="kw">COMMIT</span>;
+<span class="kw">END</span>//
+
+<span class="cm">-- Trigger: log price changes automatically</span>
+<span class="kw">CREATE TRIGGER</span> <span class="fn">after_price_update</span>
+<span class="kw">AFTER UPDATE ON</span> <span class="tb">products</span>
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+  <span class="kw">IF</span> <span class="fn">OLD</span>.<span class="co">price</span> <span class="op">!=</span> <span class="fn">NEW</span>.<span class="co">price</span> <span class="kw">THEN</span>
+    <span class="kw">INSERT INTO</span> <span class="tb">price_audit</span> (<span class="co">product_id</span>, <span class="co">old_price</span>, <span class="co">new_price</span>, <span class="co">changed_at</span>)
+    <span class="kw">VALUES</span> (<span class="fn">OLD</span>.<span class="co">product_id</span>, <span class="fn">OLD</span>.<span class="co">price</span>, <span class="fn">NEW</span>.<span class="co">price</span>, <span class="fn">NOW</span>());
+  <span class="kw">END IF</span>;
+<span class="kw">END</span>//
+
+<span class="kw">DELIMITER</span> ;
+
+<span class="cm">-- Call the procedure</span>
+<span class="kw">CALL</span> <span class="fn">PlaceOrder</span>(<span class="nm">1</span>, <span class="nm">42</span>, <span class="nm">2</span>, <span class="op">@</span>new_order_id);
+<span class="kw">SELECT</span> <span class="op">@</span>new_order_id;</pre></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="topic-card" id="json1">
+          <div class="topic-card-header" onclick="toggleCard('json1')">
+            <span class="topic-day-badge" style="background:rgba(6,182,212,0.15);color:#06b6d4;">JSON</span>
+            <span class="topic-card-title">JSON Columns & Full-Text Search</span>
+            <span class="topic-card-cat" style="background:rgba(6,182,212,0.1);color:#06b6d4;">Expert</span>
+            <span class="topic-chevron" id="chev-json1">▶</span>
+          </div>
+          <div class="topic-card-body" id="body-json1">
+            <p class="topic-desc">MySQL 5.7+ supports a native JSON column type with functions to store, query, and manipulate JSON data. Useful for semi-structured or schema-flexible data.</p>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">sql — JSON & Full-Text</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+              <div class="code-content"><pre><span class="cm">-- JSON column in a table</span>
+<span class="kw">CREATE TABLE</span> <span class="tb">products</span> (
+  <span class="co">product_id</span> <span class="dt">INT</span> <span class="kw">PRIMARY KEY</span>,
+  <span class="co">name</span>       <span class="dt">VARCHAR</span>(<span class="nm">200</span>),
+  <span class="co">metadata</span>   <span class="dt">JSON</span>
+);
+
+<span class="kw">INSERT INTO</span> <span class="tb">products</span> <span class="kw">VALUES</span> (
+  <span class="nm">1</span>, <span class="st">'Laptop'</span>,
+  <span class="st">'{"color":"silver","ram_gb":16,"tags":["portable","work"]}'</span>
+);
+
+<span class="cm">-- Extract a JSON field (-> operator)</span>
+<span class="kw">SELECT</span> <span class="co">name</span>, <span class="co">metadata</span><span class="op">-></span><span class="st">'$.color'</span> <span class="kw">AS</span> color
+<span class="kw">FROM</span> <span class="tb">products</span>;
+
+<span class="cm">-- Filter on JSON value</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="tb">products</span>
+<span class="kw">WHERE</span> <span class="co">metadata</span><span class="op">->></span><span class="st">'$.ram_gb'</span> <span class="op">&gt;=</span> <span class="nm">16</span>;
+
+<span class="cm">-- Full-text search</span>
+<span class="kw">ALTER TABLE</span> <span class="tb">articles</span>
+  <span class="kw">ADD FULLTEXT INDEX</span> <span class="co">ft_content</span>(<span class="co">title</span>, <span class="co">body</span>);
+
+<span class="kw">SELECT</span> <span class="co">title</span>, <span class="fn">MATCH</span>(<span class="co">title</span>, <span class="co">body</span>) <span class="kw">AGAINST</span> (<span class="st">'MySQL performance'</span>) <span class="kw">AS</span> relevance
+<span class="kw">FROM</span> <span class="tb">articles</span>
+<span class="kw">WHERE</span> <span class="fn">MATCH</span>(<span class="co">title</span>, <span class="co">body</span>) <span class="kw">AGAINST</span> (<span class="st">'MySQL performance'</span> <span class="kw">IN BOOLEAN MODE</span>)
+<span class="kw">ORDER BY</span> relevance <span class="kw">DESC</span>;</pre></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-footer">
+      <div class="footer-text">MySQL Mastery Hub · All 8 Weeks Unlocked · Full Curriculum</div>
+      <div class="footer-text">From Foundations to Expert — complete reference</div>
+    </div>
+
+  </div><!-- end content -->
+</main>
+
+<script>
+  function toggleCard(id) {
+    const body = document.getElementById('body-' + id);
+    const chev = document.getElementById('chev-' + id);
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    chev.classList.toggle('open', !isOpen);
+  }
+
+  function switchTab(prefix, tab, btn) {
+    const panes = document.querySelectorAll(`[id^="${prefix}-"]`);
+    panes.forEach(p => p.classList.remove('active'));
+    const target = document.getElementById(`${prefix}-${tab}`);
+    if (target) target.classList.add('active');
+    const bar = btn.closest('.tab-bar');
+    bar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function copyCode(btn) {
+    const block = btn.closest('.code-block').querySelector('pre');
+    const text = block.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 1800);
+    });
+  }
+
+  // Open all cards by default on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    // day1 is already open, close others by default, let user explore
+  });
+
+  // Smooth scroll for nav
+  document.querySelectorAll('.nav-item').forEach(a => {
+    a.addEventListener('click', e => {
+      const href = a.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        e.preventDefault();
+        const target = document.querySelector(href);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        a.classList.add('active');
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
