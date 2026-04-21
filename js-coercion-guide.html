@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JavaScript Coercion — Interactive Guide</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg2: #f7f6f3;
+    --bg3: #f0efe9;
+    --text: #1a1a18;
+    --text2: #5a5a55;
+    --text3: #8a8a83;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --blue: #185fa5;
+    --blue-bg: #e6f1fb;
+    --blue-text: #0c447c;
+    --teal: #0f6e56;
+    --teal-bg: #e1f5ee;
+    --teal-text: #085041;
+    --amber: #854f0b;
+    --amber-bg: #faeeda;
+    --amber-text: #633806;
+    --coral: #993c1d;
+    --coral-bg: #faece7;
+    --coral-text: #711b0c; /* fix for coral dark */
+    --red: #a32d2d;
+    --red-bg: #fcebeb;
+    --red-text: #791f1f;
+    --green: #3b6d11;
+    --green-bg: #eaf3de;
+    --green-text: #27500a;
+    --purple: #534ab7;
+    --purple-bg: #eeedfe;
+    --purple-text: #3c3489;
+    --radius: 10px;
+    --shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --bg2: #252523;
+      --bg3: #2e2e2b;
+      --text: #e8e6de;
+      --text2: #a8a69e;
+      --text3: #6a6862;
+      --border: rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.2);
+      --blue: #85b7eb;
+      --blue-bg: #042c53;
+      --blue-text: #b5d4f4;
+      --teal: #5dcaa5;
+      --teal-bg: #04342c;
+      --teal-text: #9fe1cb;
+      --amber: #ef9f27;
+      --amber-bg: #412402;
+      --amber-text: #fac775;
+      --coral: #f0997b;
+      --coral-bg: #4a1b0c;
+      --coral-text: #f5c4b3;
+      --red: #f09595;
+      --red-bg: #501313;
+      --red-text: #f7c1c1;
+      --green: #97c459;
+      --green-bg: #173404;
+      --green-text: #c0dd97;
+      --purple: #afa9ec;
+      --purple-bg: #26215c;
+      --purple-text: #cecbf6;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    font-size: 15px;
+  }
+
+  /* Layout */
+  .page { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 240px;
+    min-width: 240px;
+    background: var(--bg2);
+    border-right: 0.5px solid var(--border);
+    padding: 24px 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .main { flex: 1; max-width: 860px; padding: 40px 48px 80px; overflow-x: hidden; }
+
+  .logo {
+    padding: 0 20px 20px;
+    border-bottom: 0.5px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .logo-title { font-size: 13px; font-weight: 600; color: var(--text); letter-spacing: 0.04em; text-transform: uppercase; }
+  .logo-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  .nav-section { padding: 6px 20px 2px; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 10px; }
+  .nav-item {
+    display: block;
+    padding: 7px 20px;
+    font-size: 13px;
+    color: var(--text2);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition: all 0.15s;
+    cursor: pointer;
+  }
+  .nav-item:hover { color: var(--text); background: var(--bg3); }
+  .nav-item.active { color: var(--blue); border-left-color: var(--blue); background: var(--blue-bg); font-weight: 500; }
+
+  /* Typography */
+  h1 { font-size: 28px; font-weight: 600; line-height: 1.25; margin-bottom: 10px; }
+  h2 { font-size: 20px; font-weight: 600; margin: 40px 0 14px; padding-top: 8px; }
+  h3 { font-size: 16px; font-weight: 600; margin: 28px 0 10px; }
+  p { margin-bottom: 14px; color: var(--text); }
+  .lead { font-size: 16px; color: var(--text2); margin-bottom: 28px; line-height: 1.7; }
+
+  section { margin-bottom: 60px; }
+  .section-hero {
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 28px;
+    margin-bottom: 32px;
+  }
+
+  /* Badges */
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    vertical-align: middle;
+  }
+  .badge-blue { background: var(--blue-bg); color: var(--blue-text); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); }
+  .badge-green { background: var(--green-bg); color: var(--green-text); }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); }
+  .badge-purple { background: var(--purple-bg); color: var(--purple-text); }
+
+  /* Code */
+  code {
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 13px;
+    background: var(--bg3);
+    border: 0.5px solid var(--border);
+    padding: 1px 5px;
+    border-radius: 4px;
+    color: var(--coral);
+  }
+  pre {
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    overflow-x: auto;
+    margin: 14px 0;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  pre code { background: none; border: none; padding: 0; font-size: 13px; color: var(--text); }
+  .kw { color: var(--purple); font-weight: 500; }
+  .cm { color: var(--text3); font-style: italic; }
+  .str { color: var(--green); }
+  .num { color: var(--blue); }
+  .op { color: var(--amber); }
+  .out { color: var(--teal); }
+  .warn { color: var(--red); }
+
+  /* Result rows */
+  .result-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 7px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 13px;
+    margin: 4px 0;
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+  }
+  .result-row .expr { color: var(--text); flex: 1; }
+  .result-row .arrow { color: var(--text3); }
+  .result-row .val { font-weight: 600; }
+  .result-row.true .val { color: var(--green); }
+  .result-row.false .val { color: var(--red); }
+  .result-row.num .val { color: var(--blue); }
+  .result-row.str .val { color: var(--teal); }
+  .result-row.warn-row { border-color: var(--amber); background: var(--amber-bg); }
+  .result-row.warn-row .val { color: var(--amber-text); }
+
+  /* Abstract op cards */
+  .op-card {
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    margin: 20px 0;
+    overflow: hidden;
+  }
+  .op-card-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: var(--bg2);
+    border-bottom: 0.5px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+  }
+  .op-card-head:hover { background: var(--bg3); }
+  .op-card-head .op-name { font-size: 15px; font-weight: 600; }
+  .op-card-head .op-desc { font-size: 13px; color: var(--text2); flex: 1; }
+  .op-card-head .chevron { color: var(--text3); transition: transform 0.2s; font-size: 12px; }
+  .op-card-head.open .chevron { transform: rotate(180deg); }
+  .op-card-body { padding: 20px 18px; display: none; }
+  .op-card-body.open { display: block; }
+
+  /* Step table for abstract ops */
+  .step-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+  .step-table th { text-align: left; padding: 7px 10px; background: var(--bg3); border: 0.5px solid var(--border); font-weight: 600; font-size: 12px; color: var(--text2); }
+  .step-table td { padding: 7px 10px; border: 0.5px solid var(--border); vertical-align: top; }
+  .step-table tr:nth-child(even) td { background: var(--bg2); }
+  .step-table .type-col { font-weight: 600; color: var(--purple); font-family: monospace; }
+  .step-table .result-col { font-family: monospace; color: var(--teal); }
+  .step-table .note-col { color: var(--text2); font-size: 12px; }
+
+  /* Interactive playground */
+  .playground {
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin: 20px 0;
+  }
+  .playground-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: var(--bg3);
+    border-bottom: 0.5px solid var(--border);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .playground-header .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .playground-body { padding: 16px; }
+  .playground-input-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+  .playground-input {
+    flex: 1;
+    background: var(--bg);
+    border: 0.5px solid var(--border2);
+    border-radius: 7px;
+    padding: 9px 12px;
+    font-family: 'SF Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .playground-input:focus { border-color: var(--blue); }
+  .run-btn {
+    background: var(--blue-bg);
+    color: var(--blue-text);
+    border: 0.5px solid var(--blue);
+    border-radius: 7px;
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .run-btn:hover { opacity: 0.85; }
+  .playground-output {
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    border-radius: 7px;
+    padding: 12px 14px;
+    font-family: 'SF Mono', monospace;
+    font-size: 13px;
+    min-height: 40px;
+    color: var(--teal);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .output-label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+
+  /* Coercion flow diagram */
+  .flow-diagram {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 16px 0;
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+  .flow-node {
+    background: var(--bg2);
+    border: 0.5px solid var(--border2);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    min-width: 90px;
+  }
+  .flow-node.highlighted { border-width: 1.5px; }
+  .flow-node.blue { background: var(--blue-bg); border-color: var(--blue); color: var(--blue-text); }
+  .flow-node.green { background: var(--green-bg); border-color: var(--green); color: var(--green-text); }
+  .flow-node.amber { background: var(--amber-bg); border-color: var(--amber); color: var(--amber-text); }
+  .flow-node.purple { background: var(--purple-bg); border-color: var(--purple); color: var(--purple-text); }
+  .flow-node.red { background: var(--red-bg); border-color: var(--red); color: var(--red-text); }
+  .flow-node.teal { background: var(--teal-bg); border-color: var(--teal); color: var(--teal-text); }
+  .flow-arrow { padding: 0 6px; font-size: 16px; color: var(--text3); }
+
+  /* Callout boxes */
+  .callout {
+    border-left: 3px solid;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  .callout-info { background: var(--blue-bg); border-color: var(--blue); color: var(--blue-text); }
+  .callout-warn { background: var(--amber-bg); border-color: var(--amber); color: var(--amber-text); }
+  .callout-danger { background: var(--red-bg); border-color: var(--red); color: var(--red-text); }
+  .callout-success { background: var(--green-bg); border-color: var(--green); color: var(--green-text); }
+  .callout-title { font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+
+  /* Two-col grid */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } .sidebar { display: none; } .main { padding: 20px 16px 60px; } }
+
+  /* Tabs for examples */
+  .tabs { display: flex; gap: 0; border-bottom: 0.5px solid var(--border); margin-bottom: 16px; }
+  .tab-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text2);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Comparison table */
+  .cmp-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 14px 0; }
+  .cmp-table th { padding: 8px 12px; background: var(--bg3); border: 0.5px solid var(--border); text-align: left; font-weight: 600; font-size: 12px; color: var(--text2); }
+  .cmp-table td { padding: 8px 12px; border: 0.5px solid var(--border); font-family: monospace; }
+  .cmp-table tr:nth-child(even) td { background: var(--bg2); }
+  .cmp-table .t { color: var(--green); font-weight: 700; }
+  .cmp-table .f { color: var(--red); font-weight: 700; }
+
+  /* Progress indicator */
+  .progress-bar { display: flex; gap: 6px; margin-bottom: 40px; }
+  .progress-step {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--border2);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .progress-step.done { background: var(--blue); }
+
+  /* Surprise box (wtf moments) */
+  .wtf-box {
+    border: 1.5px solid var(--amber);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    background: var(--amber-bg);
+    margin: 16px 0;
+  }
+  .wtf-title { font-size: 14px; font-weight: 700; color: var(--amber-text); margin-bottom: 10px; }
+
+  /* Type pill */
+  .type-pill {
+    display: inline-block;
+    font-family: monospace;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 20px;
+    letter-spacing: 0.03em;
+  }
+
+  /* Coercion matrix */
+  .matrix { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }
+  .matrix th { padding: 7px 10px; background: var(--bg3); border: 0.5px solid var(--border); font-weight: 600; }
+  .matrix td { padding: 7px 10px; border: 0.5px solid var(--border); font-family: monospace; }
+  .matrix td.gt { color: var(--green); font-weight: 700; }
+  .matrix td.gf { color: var(--red); font-weight: 700; }
+  .matrix td.gs { color: var(--teal); }
+  .matrix td.gn { color: var(--blue); }
+  .matrix td.gna { color: var(--text3); font-style: italic; }
+
+  .scrolltop {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--blue-bg);
+    color: var(--blue-text);
+    border: 0.5px solid var(--blue);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 100;
+  }
+  .scrolltop.visible { opacity: 1; }
+
+  /* Section divider */
+  .section-divider { border: none; border-top: 0.5px solid var(--border); margin: 50px 0; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- Sidebar Nav -->
+<nav class="sidebar" aria-label="Guide navigation">
+  <div class="logo">
+    <div class="logo-title">JS Coercion</div>
+    <div class="logo-sub">Interactive Reference</div>
+  </div>
+  <div class="nav-section">Fundamentals</div>
+  <a class="nav-item active" href="#intro" onclick="setActive(this)">Introduction</a>
+  <a class="nav-item" href="#types" onclick="setActive(this)">Types Overview</a>
+  <a class="nav-item" href="#implicit-vs-explicit" onclick="setActive(this)">Implicit vs Explicit</a>
+  <div class="nav-section">Abstract Ops</div>
+  <a class="nav-item" href="#toprimitive" onclick="setActive(this)">ToPrimitive</a>
+  <a class="nav-item" href="#tonumber" onclick="setActive(this)">ToNumber</a>
+  <a class="nav-item" href="#tostring" onclick="setActive(this)">ToString</a>
+  <a class="nav-item" href="#toboolean" onclick="setActive(this)">ToBoolean</a>
+  <a class="nav-item" href="#toobject" onclick="setActive(this)">ToObject</a>
+  <div class="nav-section">Operators</div>
+  <a class="nav-item" href="#plus-operator" onclick="setActive(this)">+ Operator</a>
+  <a class="nav-item" href="#relational" onclick="setActive(this)">Relational Ops</a>
+  <a class="nav-item" href="#equality" onclick="setActive(this)">== vs ===</a>
+  <div class="nav-section">Tools</div>
+  <a class="nav-item" href="#playground" onclick="setActive(this)">Live Playground</a>
+  <a class="nav-item" href="#matrix" onclick="setActive(this)">Coercion Matrix</a>
+  <a class="nav-item" href="#gotchas" onclick="setActive(this)">Gotchas</a>
+</nav>
+
+<!-- Main content -->
+<main class="main">
+
+<!-- INTRO -->
+<section id="intro">
+  <h1>JavaScript Type Coercion</h1>
+  <p class="lead">Coercion is JavaScript's automatic (or manual) conversion of values from one type to another. It's one of the most misunderstood parts of the language — and one of the most powerful once you understand the rules.</p>
+
+  <div class="section-hero">
+    <h3 style="margin-top:0">What happens here?</h3>
+    <pre><code><span class="cm">// Each of these "just works" — but WHY?</span>
+<span class="num">1</span> <span class="op">+</span> <span class="str">"2"</span>         <span class="cm">// → "12"   (number coerced to string)</span>
+<span class="str">"5"</span> <span class="op">-</span> <span class="num">3</span>         <span class="cm">// → 2      (string coerced to number)</span>
+<span class="op">!!</span><span class="str">""</span>            <span class="cm">// → false  (string coerced to boolean)</span>
+<span class="op">!!</span><span class="str">"hello"</span>       <span class="cm">// → true</span>
+[] <span class="op">==</span> <span class="num">0</span>          <span class="cm">// → true   (array → 0!)</span>
+<span class="kw">null</span> <span class="op">==</span> <span class="kw">undefined</span> <span class="cm">// → true   (special rule)</span></code></pre>
+    <p style="margin:0;font-size:14px;color:var(--text2)">All of this is governed by a small set of <strong>abstract operations</strong> defined in the ECMAScript spec. Once you know them, nothing surprises you.</p>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div class="callout callout-info">
+        <div class="callout-title">Implicit coercion</div>
+        JavaScript converts types automatically behind the scenes. E.g., using <code>+</code> with a string and number.
+      </div>
+    </div>
+    <div>
+      <div class="callout callout-success">
+        <div class="callout-title">Explicit coercion</div>
+        You manually convert types using built-ins like <code>Number()</code>, <code>String()</code>, <code>Boolean()</code>.
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- TYPES -->
+<section id="types">
+  <h2>JavaScript's 8 Types</h2>
+  <p>Everything in JavaScript is one of these types. Coercion is the engine that converts between them.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin:16px 0">
+    <div style="background:var(--blue-bg);border:0.5px solid var(--blue);border-radius:8px;padding:12px 14px">
+      <div style="font-size:12px;font-weight:700;color:var(--blue-text);margin-bottom:4px;text-transform:uppercase">Number</div>
+      <code style="color:var(--blue-text);background:none;border:none;padding:0;font-size:12px">42, 3.14, NaN, Infinity</code>
+    </div>
+    <div style="background:var(--teal-bg);border:0.5px solid var(--teal);border-radius:8px;padding:12px 14px">
+      <div style="font-size:12px;font-weight:700;color:var(--teal-text);margin-bottom:4px;text-transform:uppercase">String</div>
+      <code style="color:var(--teal-text);background:none;border:none;padding:0;font-size:12px">"hello", "", 'x'</code>
+    </div>
+    <div style="background:var(--green-bg);border:0.5px solid var(--green);border-radius:8px;padding:12px 14px">
+      <div style="font-size:12px;font-weight:700;color:var(--green-text);margin-bottom:4px;text-transform:uppercase">Boolean</div>
+      <code style="color:var(--green-text);background:none;border:none;padding:0;font-size:12px">true, false</code>
+    </div>
+    <div style="background:var(--amber-bg);border:0.5px solid var(--amber);border-radius:8px;padding:12px 14px">
+      <div style="font-size:12px;font-weight:700;color:var(--amber-text);margin-bottom:4px;text-transform:uppercase">Undefined</div>
+      <code style="color:var(--amber-text);background:none;border:none;padding:0;font-size:12px">undefined</code>
+    </div>
+    <div style="background:var(--red-bg);border:0.5px solid var(--red);border-radius:8px;padding:12px 14px">
+      <div style="font-size:12px;font-weight:700;color:var(--red-text);margin-bottom:4px;text-transform:uppercase">Null</div>
+      <code style="color:var(--red-text);background:none;border:none;padding:0;font-size:12px">null</code>
+    </div>
+    <div style="background:var(--purple-bg);border:0.5px solid var(--purple);border-radius:8px;padding:12px 14px">
+      <div style="font-size:12px;font-weight:700;color:var(--purple-text);margin-bottom:4px;text-transform:uppercase">Object</div>
+      <code style="color:var(--purple-text);background:none;border:none;padding:0;font-size:12px">{}, [], function(){}</code>
+    </div>
+    <div style="background:var(--bg3);border:0.5px solid var(--border2);border-radius:8px;padding:12px 14px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px;text-transform:uppercase">Symbol</div>
+      <code style="font-size:12px;background:none;border:none;padding:0">Symbol('id')</code>
+    </div>
+    <div style="background:var(--bg3);border:0.5px solid var(--border2);border-radius:8px;padding:12px 14px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px;text-transform:uppercase">BigInt</div>
+      <code style="font-size:12px;background:none;border:none;padding:0">9007199254740993n</code>
+    </div>
+  </div>
+
+  <p><strong>The primitive types</strong> are: number, string, boolean, undefined, null, symbol, bigint. <strong>Everything else</strong> is an object.</p>
+</section>
+
+<hr class="section-divider">
+
+<!-- IMPLICIT VS EXPLICIT -->
+<section id="implicit-vs-explicit">
+  <h2>Implicit vs Explicit Coercion</h2>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab(this,'implicit')">Implicit (auto)</button>
+    <button class="tab-btn" onclick="switchTab(this,'explicit')">Explicit (manual)</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-implicit">
+    <p>JavaScript triggers coercion automatically in many contexts — arithmetic, comparison, template literals, logical operators, etc.</p>
+    <pre><code><span class="cm">// Arithmetic context</span>
+<span class="str">"5"</span> <span class="op">-</span> <span class="num">1</span>        <span class="cm">// → 4     (string "5" → number 5, then subtract)</span>
+<span class="str">"5"</span> <span class="op">*</span> <span class="num">2</span>        <span class="cm">// → 10    (same)</span>
+<span class="str">"5"</span> <span class="op">+</span> <span class="num">1</span>        <span class="cm">// → "51"  (DIFFERENT! + triggers string concatenation)</span>
+
+<span class="cm">// Boolean context (if/while conditions)</span>
+<span class="kw">if</span> (<span class="str">""</span>) {}       <span class="cm">// falsy — never runs</span>
+<span class="kw">if</span> (<span class="str">"hello"</span>) {}  <span class="cm">// truthy — runs</span>
+<span class="kw">if</span> (<span class="num">0</span>) {}        <span class="cm">// falsy — never runs</span>
+<span class="kw">if</span> ([]) {}       <span class="cm">// truthy! empty array is truthy</span>
+
+<span class="cm">// Template literals (always to string)</span>
+`Value: ${<span class="num">42</span>}`   <span class="cm">// → "Value: 42"</span>
+`Is: ${<span class="kw">true</span>}`   <span class="cm">// → "Is: true"</span></code></pre>
+  </div>
+
+  <div class="tab-panel" id="tab-explicit">
+    <p>You control explicit coercion explicitly using built-in functions. This is always preferred for clarity.</p>
+    <pre><code><span class="cm">// To Number</span>
+Number(<span class="str">"42"</span>)     <span class="cm">// → 42</span>
+Number(<span class="str">""</span>)       <span class="cm">// → 0</span>
+Number(<span class="kw">true</span>)     <span class="cm">// → 1</span>
+Number(<span class="kw">null</span>)     <span class="cm">// → 0</span>
+Number(<span class="kw">undefined</span>) <span class="cm">// → NaN</span>
+parseInt(<span class="str">"42px"</span>) <span class="cm">// → 42  (stops at non-numeric)</span>
+
+<span class="cm">// To String</span>
+String(<span class="num">42</span>)       <span class="cm">// → "42"</span>
+String(<span class="kw">true</span>)     <span class="cm">// → "true"</span>
+String(<span class="kw">null</span>)     <span class="cm">// → "null"</span>
+(<span class="num">42</span>).toString()  <span class="cm">// → "42"</span>
+
+<span class="cm">// To Boolean</span>
+Boolean(<span class="num">0</span>)       <span class="cm">// → false</span>
+Boolean(<span class="str">""</span>)      <span class="cm">// → false</span>
+Boolean({})      <span class="cm">// → true</span>
+Boolean([])      <span class="cm">// → true  (!!)</span>
+<span class="op">!!</span><span class="str">"hello"</span>        <span class="cm">// → true  (double-bang trick)</span></code></pre>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- TOPRIMITIVE -->
+<section id="toprimitive">
+  <h2>Abstract Operation: <code>ToPrimitive</code></h2>
+  <span class="badge badge-purple">Abstract Op</span>
+  <p style="margin-top:12px">When JavaScript needs a primitive value from an object, it calls the internal <strong>ToPrimitive</strong> operation. This is the gateway — every other abstract op (ToNumber, ToString) calls ToPrimitive first when it receives an object.</p>
+
+  <div class="callout callout-info">
+    <div class="callout-title">Signature</div>
+    <code>ToPrimitive(input, preferredType?)</code> — preferredType is either <code>"number"</code> (default) or <code>"string"</code>
+  </div>
+
+  <h3>How it works — step by step</h3>
+  <div class="flow-diagram">
+    <div class="flow-node blue">Object received</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node purple">Check Symbol.toPrimitive</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node amber">If missing: try hint methods</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node green">Return primitive</div>
+  </div>
+
+  <div class="op-card">
+    <div class="op-card-head open" onclick="toggleCard(this)">
+      <span class="badge badge-amber">hint: "number"</span>
+      <span class="op-desc">Default. Tries <code>valueOf()</code> first, then <code>toString()</code></span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="op-card-body open">
+      <p>When hint is <code>"number"</code> (the default), JS tries:</p>
+      <ol style="margin-left:20px;font-size:14px;color:var(--text2)">
+        <li style="margin-bottom:6px">Call <code>obj[Symbol.toPrimitive]("number")</code> if it exists</li>
+        <li style="margin-bottom:6px">Else call <code>obj.valueOf()</code> — if it returns a primitive, use it</li>
+        <li style="margin-bottom:6px">Else call <code>obj.toString()</code> — if it returns a primitive, use it</li>
+        <li>Else throw <code>TypeError</code></li>
+      </ol>
+      <pre><code><span class="kw">const</span> obj = {
+  valueOf() { <span class="kw">return</span> <span class="num">42</span>; },       <span class="cm">// returns a primitive</span>
+  toString() { <span class="kw">return</span> <span class="str">"hello"</span>; }
+};
+
+obj <span class="op">+</span> <span class="num">1</span>   <span class="cm">// hint: "number" → valueOf() → 42 → 42 + 1 = 43</span>
+<span class="op">+</span>obj     <span class="cm">// hint: "number" → valueOf() → 42</span></code></pre>
+    </div>
+  </div>
+
+  <div class="op-card">
+    <div class="op-card-head" onclick="toggleCard(this)">
+      <span class="badge badge-teal">hint: "string"</span>
+      <span class="op-desc">Tries <code>toString()</code> first, then <code>valueOf()</code></span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="op-card-body">
+      <p>When hint is <code>"string"</code> (e.g., template literals, <code>String()</code>), the order reverses:</p>
+      <ol style="margin-left:20px;font-size:14px;color:var(--text2)">
+        <li style="margin-bottom:6px">Call <code>obj[Symbol.toPrimitive]("string")</code> if it exists</li>
+        <li style="margin-bottom:6px">Else call <code>obj.toString()</code> — if it returns a primitive, use it</li>
+        <li>Else call <code>obj.valueOf()</code></li>
+      </ol>
+      <pre><code><span class="kw">const</span> obj = {
+  valueOf()  { <span class="kw">return</span> <span class="num">42</span>; },
+  toString() { <span class="kw">return</span> <span class="str">"hello"</span>; }
+};
+
+String(obj)         <span class="cm">// hint: "string" → toString() → "hello"</span>
+`${obj}`            <span class="cm">// hint: "string" → toString() → "hello"</span>
+obj.toString()      <span class="cm">// → "hello"</span></code></pre>
+    </div>
+  </div>
+
+  <div class="op-card">
+    <div class="op-card-head" onclick="toggleCard(this)">
+      <span class="badge badge-purple">Symbol.toPrimitive</span>
+      <span class="op-desc">Override the entire conversion with a single method</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="op-card-body">
+      <p>You can define <code>[Symbol.toPrimitive]</code> to take full control. It receives the hint as an argument.</p>
+      <pre><code><span class="kw">const</span> smartObj = {
+  [Symbol.toPrimitive](hint) {
+    <span class="kw">if</span> (hint === <span class="str">"number"</span>)  <span class="kw">return</span> <span class="num">100</span>;
+    <span class="kw">if</span> (hint === <span class="str">"string"</span>)  <span class="kw">return</span> <span class="str">"one hundred"</span>;
+    <span class="kw">return</span> <span class="kw">true</span>;  <span class="cm">// hint === "default"</span>
+  }
+};
+
+<span class="op">+</span>smartObj         <span class="cm">// → 100    (hint: "number")</span>
+`${smartObj}`     <span class="cm">// → "one hundred" (hint: "string")</span>
+smartObj <span class="op">+</span> <span class="str">""</span>    <span class="cm">// → "true"  (hint: "default")</span></code></pre>
+
+      <div class="callout callout-info" style="margin-top:14px">
+        <div class="callout-title">When does "default" hint occur?</div>
+        When using <code>+</code>, <code>==</code>, or the <code>&gt;</code>/<code>&lt;</code> operators without a clear context. The spec says <code>+</code> on an object uses <code>"default"</code> hint for ToPrimitive.
+      </div>
+    </div>
+  </div>
+
+  <h3>Built-in objects and ToPrimitive</h3>
+  <pre><code><span class="cm">// Arrays: toString() joins elements with comma</span>
+[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>].valueOf()   <span class="cm">// → [1,2,3]  (not a primitive!)</span>
+[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>].toString()  <span class="cm">// → "1,2,3"</span>
+[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>] <span class="op">+</span> <span class="str">""</span>        <span class="cm">// → "1,2,3"</span>
+[<span class="num">1</span>] <span class="op">+</span> [<span class="num">2</span>]             <span class="cm">// → "12"  !</span>
+
+<span class="cm">// Dates: prefer string hint over number</span>
+<span class="kw">new</span> Date()[Symbol.toPrimitive](<span class="str">"string"</span>)  <span class="cm">// → "Thu Apr 10 2025..."</span>
+<span class="kw">new</span> Date()[Symbol.toPrimitive](<span class="str">"number"</span>)  <span class="cm">// → 1744243200000 (timestamp)</span>
+<span class="kw">new</span> Date() <span class="op">+</span> <span class="str">""</span>                           <span class="cm">// → date string (Date uses "default" → string)</span>
+
+<span class="cm">// Plain object</span>
+({}).valueOf()   <span class="cm">// → {} (the object itself, not a primitive)</span>
+({}).toString()  <span class="cm">// → "[object Object]"</span>
+{} <span class="op">+</span> <span class="str">""</span>          <span class="cm">// → "[object Object]"</span></code></pre>
+</section>
+
+<hr class="section-divider">
+
+<!-- TONUMBER -->
+<section id="tonumber">
+  <h2>Abstract Operation: <code>ToNumber</code></h2>
+  <span class="badge badge-blue">Abstract Op</span>
+  <p style="margin-top:12px">Called whenever a numeric value is needed. Used by arithmetic operators (<code>-</code>, <code>*</code>, <code>/</code>), comparison operators, and <code>Number()</code> explicitly.</p>
+
+  <h3>Conversion table</h3>
+  <table class="step-table">
+    <thead>
+      <tr>
+        <th>Input type</th>
+        <th>Input value</th>
+        <th>ToNumber result</th>
+        <th>Why / notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="type-col">Undefined</td><td><code>undefined</code></td><td class="result-col">NaN</td><td class="note-col">No numeric meaning</td></tr>
+      <tr><td class="type-col">Null</td><td><code>null</code></td><td class="result-col">0</td><td class="note-col">"absence of value" → 0</td></tr>
+      <tr><td class="type-col">Boolean</td><td><code>true</code></td><td class="result-col">1</td><td class="note-col">True = 1</td></tr>
+      <tr><td class="type-col">Boolean</td><td><code>false</code></td><td class="result-col">0</td><td class="note-col">False = 0</td></tr>
+      <tr><td class="type-col">Number</td><td><code>any</code></td><td class="result-col">same value</td><td class="note-col">Identity operation</td></tr>
+      <tr><td class="type-col">String</td><td><code>"42"</code></td><td class="result-col">42</td><td class="note-col">Numeric string parses directly</td></tr>
+      <tr><td class="type-col">String</td><td><code>""</code></td><td class="result-col">0</td><td class="note-col">Empty string = 0 (!)</td></tr>
+      <tr><td class="type-col">String</td><td><code>"  42  "</code></td><td class="result-col">42</td><td class="note-col">Whitespace trimmed first</td></tr>
+      <tr><td class="type-col">String</td><td><code>"0x1F"</code></td><td class="result-col">31</td><td class="note-col">Hex literal parsed</td></tr>
+      <tr><td class="type-col">String</td><td><code>"hello"</code></td><td class="result-col">NaN</td><td class="note-col">Non-numeric string → NaN</td></tr>
+      <tr><td class="type-col">String</td><td><code>"3.14"</code></td><td class="result-col">3.14</td><td class="note-col">Float string works</td></tr>
+      <tr><td class="type-col">Symbol</td><td><code>Symbol()</code></td><td class="result-col">TypeError !</td><td class="note-col">Cannot coerce Symbol</td></tr>
+      <tr><td class="type-col">Object</td><td><code>[]</code></td><td class="result-col">0</td><td class="note-col">[] → "" → 0</td></tr>
+      <tr><td class="type-col">Object</td><td><code>[42]</code></td><td class="result-col">42</td><td class="note-col">[42] → "42" → 42</td></tr>
+      <tr><td class="type-col">Object</td><td><code>[1,2]</code></td><td class="result-col">NaN</td><td class="note-col">[1,2] → "1,2" → NaN</td></tr>
+      <tr><td class="type-col">Object</td><td><code>{}</code></td><td class="result-col">NaN</td><td class="note-col">{} → "[object Object]" → NaN</td></tr>
+    </tbody>
+  </table>
+
+  <div class="wtf-box">
+    <div class="wtf-title">⚠ Surprising ToNumber results</div>
+    <div class="result-row num"><span class="expr">Number("")</span><span class="arrow">→</span><span class="val">0</span></div>
+    <div class="result-row num"><span class="expr">Number(null)</span><span class="arrow">→</span><span class="val">0</span></div>
+    <div class="result-row warn-row"><span class="expr">Number(undefined)</span><span class="arrow">→</span><span class="val">NaN</span></div>
+    <div class="result-row num"><span class="expr">Number(true)</span><span class="arrow">→</span><span class="val">1</span></div>
+    <div class="result-row num"><span class="expr">Number([])</span><span class="arrow">→</span><span class="val">0</span></div>
+    <div class="result-row num"><span class="expr">Number([42])</span><span class="arrow">→</span><span class="val">42</span></div>
+    <div class="result-row warn-row"><span class="expr">Number([1,2,3])</span><span class="arrow">→</span><span class="val">NaN</span></div>
+    <div class="result-row warn-row"><span class="expr">Number({})</span><span class="arrow">→</span><span class="val">NaN</span></div>
+  </div>
+
+  <h3>Object to Number — the pipeline</h3>
+  <p>When an object hits ToNumber, it first goes through ToPrimitive (hint: "number"), then the primitive result goes through ToNumber:</p>
+  <div class="flow-diagram">
+    <div class="flow-node purple">Object</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node amber">ToPrimitive<br><small style="font-size:10px">hint: "number"</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node blue">Primitive</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node green">ToNumber<br><small style="font-size:10px">on primitive</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node teal">Number</div>
+  </div>
+
+  <pre><code><span class="cm">// Tracing [] → 0:</span>
+<span class="cm">// 1. ToPrimitive([], hint:"number")</span>
+<span class="cm">// 2. [].valueOf() → [] (not primitive, skip)</span>
+<span class="cm">// 3. [].toString() → ""  (primitive! use it)</span>
+<span class="cm">// 4. ToNumber("") → 0</span>
+Number([])  <span class="cm">// → 0</span>
+
+<span class="cm">// Tracing {} → NaN:</span>
+<span class="cm">// 1. ToPrimitive({}, hint:"number")</span>
+<span class="cm">// 2. {}.valueOf() → {} (not primitive, skip)</span>
+<span class="cm">// 3. {}.toString() → "[object Object]" (primitive!)</span>
+<span class="cm">// 4. ToNumber("[object Object]") → NaN</span>
+Number({})  <span class="cm">// → NaN</span></code></pre>
+</section>
+
+<hr class="section-divider">
+
+<!-- TOSTRING -->
+<section id="tostring">
+  <h2>Abstract Operation: <code>ToString</code></h2>
+  <span class="badge badge-teal">Abstract Op</span>
+  <p style="margin-top:12px">Called when a string representation is needed. Used by template literals, <code>String()</code>, the <code>+</code> operator when one side is a string, and <code>console.log</code>.</p>
+
+  <table class="step-table">
+    <thead>
+      <tr>
+        <th>Input type</th>
+        <th>Input value</th>
+        <th>ToString result</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="type-col">Undefined</td><td><code>undefined</code></td><td class="result-col">"undefined"</td><td class="note-col">Literal string</td></tr>
+      <tr><td class="type-col">Null</td><td><code>null</code></td><td class="result-col">"null"</td><td class="note-col">Literal string</td></tr>
+      <tr><td class="type-col">Boolean</td><td><code>true</code></td><td class="result-col">"true"</td><td class="note-col">Literal string</td></tr>
+      <tr><td class="type-col">Boolean</td><td><code>false</code></td><td class="result-col">"false"</td><td class="note-col">Literal string</td></tr>
+      <tr><td class="type-col">Number</td><td><code>0</code></td><td class="result-col">"0"</td><td class="note-col"></td></tr>
+      <tr><td class="type-col">Number</td><td><code>-0</code></td><td class="result-col">"0"</td><td class="note-col">-0 loses sign!</td></tr>
+      <tr><td class="type-col">Number</td><td><code>NaN</code></td><td class="result-col">"NaN"</td><td class="note-col"></td></tr>
+      <tr><td class="type-col">Number</td><td><code>Infinity</code></td><td class="result-col">"Infinity"</td><td class="note-col"></td></tr>
+      <tr><td class="type-col">Number</td><td><code>1e21</code></td><td class="result-col">"1e+21"</td><td class="note-col">Scientific notation</td></tr>
+      <tr><td class="type-col">Object</td><td><code>[]</code></td><td class="result-col">""</td><td class="note-col">[].join(",") → ""</td></tr>
+      <tr><td class="type-col">Object</td><td><code>[1,2,3]</code></td><td class="result-col">"1,2,3"</td><td class="note-col">Elements joined by comma</td></tr>
+      <tr><td class="type-col">Object</td><td><code>{}</code></td><td class="result-col">"[object Object]"</td><td class="note-col">Default Object.toString</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">-0 is silently lost</div>
+    <code>String(-0) === "0"</code> — negative zero becomes <code>"0"</code>. Use <code>Object.is(x, -0)</code> to check for it.
+  </div>
+
+  <h3>Object to String — the pipeline</h3>
+  <div class="flow-diagram">
+    <div class="flow-node purple">Object</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node amber">ToPrimitive<br><small style="font-size:10px">hint: "string"</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node teal">Primitive</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node green">ToString<br><small style="font-size:10px">on primitive</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node teal">String</div>
+  </div>
+
+  <pre><code><span class="cm">// Objects go through ToPrimitive(hint:"string") first</span>
+
+<span class="cm">// Custom toString()</span>
+<span class="kw">const</span> user = {
+  name: <span class="str">"Alice"</span>,
+  toString() { <span class="kw">return</span> this.name; }
+};
+String(user)         <span class="cm">// → "Alice"</span>
+`Hello, ${user}!`    <span class="cm">// → "Hello, Alice!"</span>
+<span class="str">"User: "</span> <span class="op">+</span> user       <span class="cm">// → "User: Alice"</span>
+
+<span class="cm">// Array's toString is join with comma</span>
+String([<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>])     <span class="cm">// → "1,2,3"</span>
+String([[<span class="num">1</span>],[<span class="num">2</span>]])     <span class="cm">// → "1,2"</span>
+String([<span class="num">1</span>,[<span class="num">2</span>,[<span class="num">3</span>]]])  <span class="cm">// → "1,2,3" (recursive!)</span>
+
+<span class="cm">// Number edge cases</span>
+String(<span class="num">0.0001</span>)        <span class="cm">// → "0.0001"</span>
+String(<span class="num">0.000001</span>)      <span class="cm">// → "0.000001"</span>
+String(<span class="num">0.0000001</span>)     <span class="cm">// → "1e-7"  (switches to scientific)</span>
+String(<span class="num">1e21</span>)          <span class="cm">// → "1e+21"</span></code></pre>
+</section>
+
+<hr class="section-divider">
+
+<!-- TOBOOLEAN -->
+<section id="toboolean">
+  <h2>Abstract Operation: <code>ToBoolean</code></h2>
+  <span class="badge badge-green">Abstract Op</span>
+  <p style="margin-top:12px">Called in boolean contexts: <code>if</code>/<code>while</code> conditions, <code>&&</code>/<code>||</code>/<code>!</code> operators, ternary <code>? :</code>, and <code>Boolean()</code> explicitly.</p>
+
+  <div class="callout callout-success">
+    <div class="callout-title">The complete falsy list (only 8 values)</div>
+    <code>false</code>, <code>0</code>, <code>-0</code>, <code>0n</code> (BigInt zero), <code>""</code> (empty string), <code>null</code>, <code>undefined</code>, <code>NaN</code> — <strong>everything else is truthy</strong>.
+  </div>
+
+  <h3>Falsy values — exhaustive list</h3>
+  <div class="result-row false"><span class="expr">Boolean(false)</span><span class="arrow">→</span><span class="val">false</span></div>
+  <div class="result-row false"><span class="expr">Boolean(0)</span><span class="arrow">→</span><span class="val">false</span></div>
+  <div class="result-row false"><span class="expr">Boolean(-0)</span><span class="arrow">→</span><span class="val">false</span></div>
+  <div class="result-row false"><span class="expr">Boolean(0n)</span><span class="arrow">→</span><span class="val">false</span></div>
+  <div class="result-row false"><span class="expr">Boolean("")</span><span class="arrow">→</span><span class="val">false</span></div>
+  <div class="result-row false"><span class="expr">Boolean(null)</span><span class="arrow">→</span><span class="val">false</span></div>
+  <div class="result-row false"><span class="expr">Boolean(undefined)</span><span class="arrow">→</span><span class="val">false</span></div>
+  <div class="result-row false"><span class="expr">Boolean(NaN)</span><span class="arrow">→</span><span class="val">false</span></div>
+
+  <h3 style="margin-top:24px">Truthy surprises 😮</h3>
+  <div class="result-row true"><span class="expr">Boolean([])</span><span class="arrow">→</span><span class="val">true</span> <small style="color:var(--text3);margin-left:6px">empty array is truthy!</small></div>
+  <div class="result-row true"><span class="expr">Boolean({})</span><span class="arrow">→</span><span class="val">true</span> <small style="color:var(--text3);margin-left:6px">empty object is truthy!</small></div>
+  <div class="result-row true"><span class="expr">Boolean("0")</span><span class="arrow">→</span><span class="val">true</span> <small style="color:var(--text3);margin-left:6px">non-empty string, even "0"!</small></div>
+  <div class="result-row true"><span class="expr">Boolean("false")</span><span class="arrow">→</span><span class="val">true</span> <small style="color:var(--text3);margin-left:6px">non-empty string!</small></div>
+  <div class="result-row true"><span class="expr">Boolean(new Boolean(false))</span><span class="arrow">→</span><span class="val">true</span> <small style="color:var(--text3);margin-left:6px">it's an object!</small></div>
+  <div class="result-row true"><span class="expr">Boolean(Infinity)</span><span class="arrow">→</span><span class="val">true</span> <small style="color:var(--text3);margin-left:6px">not in the falsy list</small></div>
+
+  <h3>ToBoolean does NOT call ToPrimitive</h3>
+  <p>Unlike ToNumber and ToString, ToBoolean is a simple lookup — it doesn't convert objects to primitives first. An object is <em>always truthy</em>, no matter what its <code>valueOf()</code> or <code>toString()</code> returns.</p>
+
+  <pre><code><span class="kw">const</span> sneaky = {
+  valueOf() { <span class="kw">return</span> <span class="num">0</span>; },       <span class="cm">// zero (falsy number)</span>
+  toString() { <span class="kw">return</span> <span class="str">""</span>; }      <span class="cm">// empty string (falsy)</span>
+};
+
+<span class="kw">if</span> (sneaky) console.log(<span class="str">"runs!"</span>); <span class="cm">// → "runs!" (it's an object!)</span>
+Boolean(sneaky)                    <span class="cm">// → true</span>
+Number(sneaky)                     <span class="cm">// → 0 (uses valueOf)</span>
+
+<span class="cm">// The common bug:</span>
+<span class="kw">const</span> val = <span class="num">0</span>;
+<span class="kw">if</span> (val) { <span class="cm">/* never runs */</span> }           <span class="cm">// 0 is falsy</span>
+<span class="kw">if</span> (val !== <span class="kw">undefined</span>) { <span class="cm">/* runs */</span> }  <span class="cm">// 0 IS defined, use explicit check</span></code></pre>
+</section>
+
+<hr class="section-divider">
+
+<!-- TOOBJECT -->
+<section id="toobject">
+  <h2>Abstract Operation: <code>ToObject</code></h2>
+  <span class="badge badge-amber">Abstract Op</span>
+  <p style="margin-top:12px">The reverse direction — wrapping a primitive in its object wrapper. This is what happens when you call a method on a primitive like <code>"hello".toUpperCase()</code>.</p>
+
+  <table class="step-table">
+    <thead>
+      <tr><th>Input</th><th>Result</th><th>Wrapper type</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>undefined</code></td><td class="result-col">TypeError!</td><td class="note-col">Cannot wrap undefined</td></tr>
+      <tr><td><code>null</code></td><td class="result-col">TypeError!</td><td class="note-col">Cannot wrap null</td></tr>
+      <tr><td><code>true</code> / <code>false</code></td><td class="result-col">Boolean object</td><td class="note-col"><code>new Boolean(true)</code></td></tr>
+      <tr><td><code>42</code></td><td class="result-col">Number object</td><td class="note-col"><code>new Number(42)</code></td></tr>
+      <tr><td><code>"hello"</code></td><td class="result-col">String object</td><td class="note-col"><code>new String("hello")</code></td></tr>
+      <tr><td><code>Symbol()</code></td><td class="result-col">Symbol object</td><td class="note-col"><code>Object(Symbol())</code></td></tr>
+      <tr><td>any object</td><td class="result-col">same object</td><td class="note-col">Identity, no wrapping</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Auto-boxing: the invisible ToObject</h3>
+  <p>Every time you access a property or method on a primitive, JavaScript silently calls ToObject behind the scenes, then discards the wrapper:</p>
+  <pre><code><span class="cm">// What you write:</span>
+<span class="str">"hello"</span>.toUpperCase()    <span class="cm">// → "HELLO"</span>
+<span class="str">"hello"</span>.length           <span class="cm">// → 5</span>
+(<span class="num">42</span>).toFixed(<span class="num">2</span>)          <span class="cm">// → "42.00"</span>
+<span class="kw">true</span>.toString()           <span class="cm">// → "true"</span>
+
+<span class="cm">// What JS actually does (conceptually):</span>
+<span class="kw">let</span> temp = <span class="kw">new</span> String(<span class="str">"hello"</span>);  <span class="cm">// ToObject("hello")</span>
+temp.toUpperCase();                  <span class="cm">// → "HELLO"</span>
+<span class="cm">// temp is discarded immediately — you can't set properties on primitives!</span>
+
+<span class="cm">// This is why this silently fails:</span>
+<span class="str">"hello"</span>.custom = <span class="num">42</span>;   <span class="cm">// wrapper created, property set, wrapper discarded</span>
+<span class="str">"hello"</span>.custom;         <span class="cm">// → undefined (new wrapper, property gone)</span></code></pre>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">Don't use new Boolean() / new Number() / new String()</div>
+    Wrapping primitives creates objects, which are <em>always truthy</em> regardless of their value. <code>new Boolean(false)</code> is truthy! Use <code>Boolean()</code>, <code>Number()</code>, <code>String()</code> without <code>new</code>.
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- PLUS OPERATOR -->
+<section id="plus-operator">
+  <h2>The <code>+</code> Operator</h2>
+  <p>The <code>+</code> operator is the most complicated coercion site in JavaScript. It can mean <strong>numeric addition</strong> or <strong>string concatenation</strong> — and the decision is made at runtime based on the types.</p>
+
+  <div class="op-card">
+    <div class="op-card-head open" onclick="toggleCard(this)">
+      <span class="badge badge-blue">Algorithm</span>
+      <span class="op-desc">How + decides what to do</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="op-card-body open">
+      <ol style="margin-left:20px;font-size:14px;line-height:2">
+        <li>Call <code>ToPrimitive(left, "default")</code> and <code>ToPrimitive(right, "default")</code></li>
+        <li>If either result is a <strong>string</strong> → concatenate both as strings (both go through ToString)</li>
+        <li>Otherwise → add both as numbers (both go through ToNumber)</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="flow-diagram" style="flex-wrap:wrap;row-gap:10px">
+    <div class="flow-node blue">left + right</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node amber">ToPrimitive each</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node purple">Either a string?</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node teal">Yes: concatenate</div>
+  </div>
+  <div class="flow-diagram" style="margin-top:6px">
+    <div style="width:420px"></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node green">No: add numbers</div>
+  </div>
+
+  <pre><code><span class="cm">// String wins — any string operand → concatenation</span>
+<span class="num">1</span> <span class="op">+</span> <span class="str">"2"</span>      <span class="cm">// → "12"   (1 → "1", then "1"+"2")</span>
+<span class="str">"1"</span> <span class="op">+</span> <span class="num">2</span>      <span class="cm">// → "12"   (2 → "2", then "1"+"2")</span>
+<span class="str">"1"</span> <span class="op">+</span> <span class="str">"2"</span>    <span class="cm">// → "12"   (both strings, concat)</span>
+
+<span class="cm">// Both non-string primitives → numeric addition</span>
+<span class="num">1</span> <span class="op">+</span> <span class="num">2</span>        <span class="cm">// → 3</span>
+<span class="num">1</span> <span class="op">+</span> <span class="kw">true</span>     <span class="cm">// → 2    (true → 1)</span>
+<span class="num">1</span> <span class="op">+</span> <span class="kw">null</span>     <span class="cm">// → 1    (null → 0)</span>
+<span class="num">1</span> <span class="op">+</span> <span class="kw">undefined</span> <span class="cm">// → NaN  (undefined → NaN)</span>
+<span class="kw">true</span> <span class="op">+</span> <span class="kw">true</span>  <span class="cm">// → 2</span>
+<span class="kw">null</span> <span class="op">+</span> <span class="kw">null</span>  <span class="cm">// → 0</span>
+
+<span class="cm">// Objects → ToPrimitive first</span>
+[] <span class="op">+</span> []       <span class="cm">// → ""    ([] → "", "" + "" = "")</span>
+[] <span class="op">+</span> {}       <span class="cm">// → "[object Object]"  ([] → "", {} → "[object Object]")</span>
+{} <span class="op">+</span> []       <span class="cm">// → 0     (as a statement, {} is parsed as a block!)</span>
+({}) <span class="op">+</span> []     <span class="cm">// → "[object Object]"</span>
+
+<span class="cm">// Classic interview question:</span>
+<span class="num">1</span> <span class="op">+</span> <span class="num">2</span> <span class="op">+</span> <span class="str">"3"</span>  <span class="cm">// → "33"   (left to right: 1+2=3, then 3+"3"="33")</span>
+<span class="str">"1"</span> <span class="op">+</span> <span class="num">2</span> <span class="op">+</span> <span class="num">3</span>  <span class="cm">// → "123"  ("1"+2="12", then "12"+3="123")</span></code></pre>
+</section>
+
+<hr class="section-divider">
+
+<!-- RELATIONAL -->
+<section id="relational">
+  <h2>Relational Operators: <code>&lt;</code> <code>&gt;</code> <code>&lt;=</code> <code>&gt;=</code></h2>
+  <p>These operators use an <strong>Abstract Relational Comparison</strong> algorithm — which also involves ToPrimitive and ToNumber.</p>
+
+  <div class="op-card">
+    <div class="op-card-head open" onclick="toggleCard(this)">
+      <span class="badge badge-blue">Algorithm: a &lt; b</span>
+      <span class="op-desc">Abstract relational comparison</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="op-card-body open">
+      <ol style="margin-left:20px;font-size:14px;line-height:2">
+        <li>Compute <code>px = ToPrimitive(a, "number")</code></li>
+        <li>Compute <code>py = ToPrimitive(b, "number")</code></li>
+        <li>If <strong>both</strong> px and py are strings → compare lexicographically</li>
+        <li>Otherwise → compare numerically (ToNumber both)</li>
+      </ol>
+    </div>
+  </div>
+
+  <pre><code><span class="cm">// Both strings → lexicographic (character code comparison)</span>
+<span class="str">"abc"</span> <span class="op">&lt;</span> <span class="str">"abd"</span>    <span class="cm">// → true  (c < d)</span>
+<span class="str">"10"</span> <span class="op">&lt;</span> <span class="str">"9"</span>      <span class="cm">// → true!  "1" < "9" lexicographically</span>
+<span class="str">"B"</span> <span class="op">&lt;</span> <span class="str">"a"</span>       <span class="cm">// → true   uppercase letters < lowercase (ASCII)</span>
+
+<span class="cm">// One or both non-strings → numeric</span>
+<span class="str">"5"</span> <span class="op">&gt;</span> <span class="num">4</span>         <span class="cm">// → true  ("5" → 5, 5 > 4)</span>
+<span class="kw">null</span> <span class="op">&gt;</span> <span class="num">0</span>        <span class="cm">// → false (null → 0, 0 > 0 is false)</span>
+<span class="kw">null</span> <span class="op">==</span> <span class="num">0</span>       <span class="cm">// → false (null only == undefined)</span>
+<span class="kw">null</span> <span class="op">&gt;=</span> <span class="num">0</span>       <span class="cm">// → true!  (null → 0, 0 >= 0)</span>
+<span class="kw">null</span> <span class="op">&lt;</span> <span class="num">1</span>        <span class="cm">// → true   (null → 0, 0 < 1)</span>
+
+<span class="cm">// NaN comparisons are always false</span>
+NaN <span class="op">&lt;</span> <span class="num">1</span>          <span class="cm">// → false</span>
+NaN <span class="op">&gt;</span> <span class="num">1</span>          <span class="cm">// → false</span>
+NaN <span class="op">==</span> NaN        <span class="cm">// → false  (NaN is not equal to itself!)</span>
+isNaN(NaN)        <span class="cm">// → true   (use this to check)</span></code></pre>
+
+  <div class="wtf-box">
+    <div class="wtf-title">⚠ The null &gt;= 0 paradox</div>
+    <p style="font-size:13px;margin-bottom:10px;color:var(--amber-text)"><code>null &gt; 0</code> is false, <code>null == 0</code> is false, yet <code>null &gt;= 0</code> is true. How?</p>
+    <p style="font-size:13px;color:var(--amber-text);margin:0"><code>&gt;=</code> is computed as <code>!(null &lt; 0)</code>. Since <code>null &lt; 0</code> is false, <code>!(false)</code> is <code>true</code>. The <code>==</code> operator uses a completely different algorithm that special-cases null.</p>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- EQUALITY -->
+<section id="equality">
+  <h2>Abstract Equality (<code>==</code>) vs Strict Equality (<code>===</code>)</h2>
+
+  <div class="two-col">
+    <div class="callout callout-info">
+      <div class="callout-title">=== Strict equality</div>
+      No coercion. Different types → always false. Same type → compare values directly. Use this by default.
+    </div>
+    <div class="callout callout-warn">
+      <div class="callout-title">== Abstract equality</div>
+      May coerce types before comparing. Uses the <strong>Abstract Equality Comparison</strong> algorithm. Surprising results abound.
+    </div>
+  </div>
+
+  <div class="op-card">
+    <div class="op-card-head open" onclick="toggleCard(this)">
+      <span class="badge badge-amber">== Algorithm</span>
+      <span class="op-desc">Abstract Equality Comparison rules (in order)</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="op-card-body open">
+      <table class="step-table">
+        <thead><tr><th>Condition</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td>Same type on both sides</td><td>Compare with ===</td></tr>
+          <tr><td><code>null == undefined</code> or <code>undefined == null</code></td><td>true (special rule)</td></tr>
+          <tr><td><code>null == anything_else</code></td><td>false (special rule)</td></tr>
+          <tr><td>Number == String</td><td>ToNumber(String), then compare</td></tr>
+          <tr><td>Boolean == anything</td><td>ToNumber(Boolean) first, then re-compare</td></tr>
+          <tr><td>Object == String/Number/Symbol</td><td>ToPrimitive(Object), then re-compare</td></tr>
+          <tr><td>anything else</td><td>false</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3>Step-by-step examples</h3>
+  <pre><code><span class="cm">// "42" == 42</span>
+<span class="cm">// Rule: String == Number → ToNumber("42") = 42 → 42 == 42 → true</span>
+<span class="str">"42"</span> <span class="op">==</span> <span class="num">42</span>    <span class="cm">// → true</span>
+
+<span class="cm">// true == "1"</span>
+<span class="cm">// Rule: Boolean → ToNumber(true) = 1 → 1 == "1"</span>
+<span class="cm">// Rule: Number == String → ToNumber("1") = 1 → 1 == 1 → true</span>
+<span class="kw">true</span> <span class="op">==</span> <span class="str">"1"</span>  <span class="cm">// → true</span>
+
+<span class="cm">// null == undefined → true (special rule, no coercion)</span>
+<span class="kw">null</span> <span class="op">==</span> <span class="kw">undefined</span>  <span class="cm">// → true</span>
+<span class="kw">null</span> <span class="op">===</span> <span class="kw">undefined</span> <span class="cm">// → false</span>
+
+<span class="cm">// [] == false</span>
+<span class="cm">// Rule: Boolean → ToNumber(false) = 0 → [] == 0</span>
+<span class="cm">// Rule: Object == Number → ToPrimitive([]) = "" → "" == 0</span>
+<span class="cm">// Rule: String == Number → ToNumber("") = 0 → 0 == 0 → true</span>
+[] <span class="op">==</span> <span class="kw">false</span>   <span class="cm">// → true</span>
+
+<span class="cm">// The legendary: [] == ![]</span>
+<span class="cm">// ![] → !true → false  ([] is truthy)</span>
+<span class="cm">// [] == false → (see above) → true</span>
+[] <span class="op">==</span> ![]     <span class="cm">// → true !</span></code></pre>
+
+  <h3>== comparison table (common cases)</h3>
+  <table class="cmp-table">
+    <thead>
+      <tr><th>Left</th><th>Right</th><th>==</th><th>===</th><th>Why ==</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>"42"</td><td>42</td><td class="t">true</td><td class="f">false</td><td>String → Number</td></tr>
+      <tr><td>0</td><td>false</td><td class="t">true</td><td class="f">false</td><td>Boolean → 0</td></tr>
+      <tr><td>1</td><td>true</td><td class="t">true</td><td class="f">false</td><td>Boolean → 1</td></tr>
+      <tr><td>null</td><td>undefined</td><td class="t">true</td><td class="f">false</td><td>Special rule</td></tr>
+      <tr><td>null</td><td>0</td><td class="f">false</td><td class="f">false</td><td>null ≠ non-null</td></tr>
+      <tr><td>[]</td><td>false</td><td class="t">true</td><td class="f">false</td><td>[] → "" → 0</td></tr>
+      <tr><td>[]</td><td>0</td><td class="t">true</td><td class="f">false</td><td>[] → "" → 0</td></tr>
+      <tr><td>[]</td><td>""</td><td class="t">true</td><td class="f">false</td><td>[] → ""</td></tr>
+      <tr><td>{}</td><td>[object Object]</td><td class="t">true</td><td class="f">false</td><td>{} → "[object Object]"</td></tr>
+      <tr><td>NaN</td><td>NaN</td><td class="f">false</td><td class="f">false</td><td>NaN ≠ NaN always</td></tr>
+      <tr><td>0</td><td>-0</td><td class="t">true</td><td class="t">true</td><td>Same numeric value</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-danger">
+    <div class="callout-title">Rule of thumb</div>
+    Use <code>===</code> by default. Use <code>==</code> only when you explicitly want the <code>null == undefined</code> check (a common pattern: <code>if (x == null)</code> catches both null and undefined).
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- PLAYGROUND -->
+<section id="playground">
+  <h2>Live Coercion Playground</h2>
+  <p>Type any JavaScript expression and see it evaluated live. Try coercion-heavy expressions!</p>
+
+  <div class="playground">
+    <div class="playground-header">
+      <div class="dot" style="background:#e25e3e"></div>
+      <div class="dot" style="background:#f5a623"></div>
+      <div class="dot" style="background:#2ac940"></div>
+      <span>coercion-repl</span>
+    </div>
+    <div class="playground-body">
+      <div class="playground-input-row">
+        <input class="playground-input" id="repl-input" placeholder='Try: [] + {} or "5" - 3 or null >= 0' onkeydown="if(event.key==='Enter')evalExpr()">
+        <button class="run-btn" onclick="evalExpr()">Run ▶</button>
+      </div>
+      <div class="output-label">Output</div>
+      <div class="playground-output" id="repl-output">// Result appears here</div>
+    </div>
+  </div>
+
+  <h3>Quick examples — click to run</h3>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin:14px 0">
+    <button class="run-btn" onclick="runQuick('[] + []')"><code>[] + []</code></button>
+    <button class="run-btn" onclick="runQuick('[] + {}')"><code>[] + {}</code></button>
+    <button class="run-btn" onclick="runQuick('{} + []')"><code>{} + []</code></button>
+    <button class="run-btn" onclick="runQuick(\'[] == false\')"><code>[] == false</code></button>
+    <button class="run-btn" onclick="runQuick(\'[] == !\[]\')"><code>[] == ![]</code></button>
+    <button class="run-btn" onclick="runQuick(\'null >= 0\')"><code>null >= 0</code></button>
+    <button class="run-btn" onclick="runQuick(\'\"5\" - 3\')"><code>"5" - 3</code></button>
+    <button class="run-btn" onclick="runQuick(\'\"5\" + 3\')"><code>"5" + 3</code></button>
+    <button class="run-btn" onclick="runQuick('Number(null)')"><code>Number(null)</code></button>
+    <button class="run-btn" onclick="runQuick('Number(undefined)')"><code>Number(undefined)</code></button>
+    <button class="run-btn" onclick="runQuick('Number([])')"><code>Number([])</code></button>
+    <button class="run-btn" onclick="runQuick('Number([42])')"><code>Number([42])</code></button>
+    <button class="run-btn" onclick="runQuick('Boolean([])')"><code>Boolean([])</code></button>
+    <button class="run-btn" onclick="runQuick('1 + 2 + \"3\"')"><code>1+2+"3"</code></button>
+    <button class="run-btn" onclick="runQuick('typeof NaN')"><code>typeof NaN</code></button>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- MATRIX -->
+<section id="matrix">
+  <h2>Coercion Matrix</h2>
+  <p>What does each value convert to with each operation? A quick reference.</p>
+
+  <h3>ToNumber results</h3>
+  <table class="matrix">
+    <thead>
+      <tr><th>Value</th><th>Number(x)</th><th>+x</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>undefined</code></td><td class="gna">NaN</td><td class="gna">NaN</td></tr>
+      <tr><td><code>null</code></td><td class="gn">0</td><td class="gn">0</td></tr>
+      <tr><td><code>true</code></td><td class="gn">1</td><td class="gn">1</td></tr>
+      <tr><td><code>false</code></td><td class="gn">0</td><td class="gn">0</td></tr>
+      <tr><td><code>""</code></td><td class="gn">0</td><td class="gn">0</td></tr>
+      <tr><td><code>"  "</code></td><td class="gn">0</td><td class="gn">0</td></tr>
+      <tr><td><code>"42"</code></td><td class="gn">42</td><td class="gn">42</td></tr>
+      <tr><td><code>"0x1A"</code></td><td class="gn">26</td><td class="gn">26</td></tr>
+      <tr><td><code>"hello"</code></td><td class="gna">NaN</td><td class="gna">NaN</td></tr>
+      <tr><td><code>[]</code></td><td class="gn">0</td><td class="gn">0</td></tr>
+      <tr><td><code>[42]</code></td><td class="gn">42</td><td class="gn">42</td></tr>
+      <tr><td><code>[1,2]</code></td><td class="gna">NaN</td><td class="gna">NaN</td></tr>
+      <tr><td><code>{}</code></td><td class="gna">NaN</td><td class="gna">NaN</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin-top:24px">ToBoolean results</h3>
+  <table class="matrix">
+    <thead>
+      <tr><th>Value</th><th>Boolean(x)</th><th>!!x</th><th>in if()</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>undefined</code></td><td class="gf">false</td><td class="gf">false</td><td class="gf">skip</td></tr>
+      <tr><td><code>null</code></td><td class="gf">false</td><td class="gf">false</td><td class="gf">skip</td></tr>
+      <tr><td><code>0</code></td><td class="gf">false</td><td class="gf">false</td><td class="gf">skip</td></tr>
+      <tr><td><code>NaN</code></td><td class="gf">false</td><td class="gf">false</td><td class="gf">skip</td></tr>
+      <tr><td><code>""</code></td><td class="gf">false</td><td class="gf">false</td><td class="gf">skip</td></tr>
+      <tr><td><code>false</code></td><td class="gf">false</td><td class="gf">false</td><td class="gf">skip</td></tr>
+      <tr><td><code>1</code></td><td class="gt">true</td><td class="gt">true</td><td class="gt">run</td></tr>
+      <tr><td><code>"0"</code></td><td class="gt">true</td><td class="gt">true</td><td class="gt">run</td></tr>
+      <tr><td><code>"false"</code></td><td class="gt">true</td><td class="gt">true</td><td class="gt">run</td></tr>
+      <tr><td><code>[]</code></td><td class="gt">true</td><td class="gt">true</td><td class="gt">run</td></tr>
+      <tr><td><code>{}</code></td><td class="gt">true</td><td class="gt">true</td><td class="gt">run</td></tr>
+      <tr><td><code>Infinity</code></td><td class="gt">true</td><td class="gt">true</td><td class="gt">run</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin-top:24px">ToString results</h3>
+  <table class="matrix">
+    <thead>
+      <tr><th>Value</th><th>String(x)</th><th>`${x}`</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>undefined</code></td><td class="gs">"undefined"</td><td class="gs">"undefined"</td></tr>
+      <tr><td><code>null</code></td><td class="gs">"null"</td><td class="gs">"null"</td></tr>
+      <tr><td><code>true</code></td><td class="gs">"true"</td><td class="gs">"true"</td></tr>
+      <tr><td><code>-0</code></td><td class="gs">"0"</td><td class="gs">"0"</td></tr>
+      <tr><td><code>NaN</code></td><td class="gs">"NaN"</td><td class="gs">"NaN"</td></tr>
+      <tr><td><code>[]</code></td><td class="gs">""</td><td class="gs">""</td></tr>
+      <tr><td><code>[1,2,3]</code></td><td class="gs">"1,2,3"</td><td class="gs">"1,2,3"</td></tr>
+      <tr><td><code>{}</code></td><td class="gs">"[object Object]"</td><td class="gs">"[object Object]"</td></tr>
+      <tr><td><code>Infinity</code></td><td class="gs">"Infinity"</td><td class="gs">"Infinity"</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<hr class="section-divider">
+
+<!-- GOTCHAS -->
+<section id="gotchas">
+  <h2>Top Coercion Gotchas</h2>
+  <p>These are the most common bugs caused by coercion — know them, and you'll write much safer JS.</p>
+
+  <div class="wtf-box" style="margin-bottom:16px">
+    <div class="wtf-title">1. typeof NaN === "number"</div>
+    <pre style="margin:0;background:var(--amber-bg);border-color:var(--amber)"><code>typeof NaN         <span class="cm">// → "number"  (Not-a-Number IS a Number type!)</span>
+isNaN("hello")     <span class="cm">// → true  (isNaN coerces first: Number("hello") = NaN)</span>
+Number.isNaN("hello") <span class="cm">// → false (safer! doesn't coerce)</span>
+Number.isNaN(NaN)  <span class="cm">// → true  ✓ use this</span></code></pre>
+  </div>
+
+  <div class="wtf-box" style="margin-bottom:16px">
+    <div class="wtf-title">2. parseInt vs Number for strings</div>
+    <pre style="margin:0;background:var(--amber-bg);border-color:var(--amber)"><code>parseInt(<span class="str">"42abc"</span>)  <span class="cm">// → 42   (stops at non-numeric char)</span>
+Number(<span class="str">"42abc"</span>)   <span class="cm">// → NaN  (entire string must be numeric)</span>
+parseInt(<span class="str">"0x1F"</span>) <span class="cm">// → 31   (hex!)</span>
+parseInt(<span class="str">"010"</span>)   <span class="cm">// → 10   (not octal in modern JS — always use radix)</span>
+parseInt(<span class="str">"010"</span>, <span class="num">8</span>)<span class="cm">// → 8    (explicit octal)</span>
+parseInt(<span class="str">"010"</span>, <span class="num">10</span>)<span class="cm">// → 10  (explicit decimal — always do this)</span></code></pre>
+  </div>
+
+  <div class="wtf-box" style="margin-bottom:16px">
+    <div class="wtf-title">3. Loose equality with arrays</div>
+    <pre style="margin:0;background:var(--amber-bg);border-color:var(--amber)"><code>[] <span class="op">==</span> <span class="kw">false</span>    <span class="cm">// → true  ([] → "" → 0, false → 0)</span>
+[] <span class="op">==</span> <span class="num">0</span>       <span class="cm">// → true  ([] → "" → 0)</span>
+[] <span class="op">==</span> <span class="str">""</span>      <span class="cm">// → true  ([] → "")</span>
+[] <span class="op">==</span> ![]     <span class="cm">// → true  (![] = false, then [] == false = true)</span>
+[<span class="num">0</span>] <span class="op">==</span> <span class="kw">false</span>  <span class="cm">// → true  ([0] → "0" → 0, false → 0)</span></code></pre>
+  </div>
+
+  <div class="wtf-box" style="margin-bottom:16px">
+    <div class="wtf-title">4. +[] and +{} weirdness</div>
+    <pre style="margin:0;background:var(--amber-bg);border-color:var(--amber)"><code><span class="op">+</span>[]    <span class="cm">// → 0   (unary + → ToNumber → ToPrimitive([]) = "" → 0)</span>
+<span class="op">+</span>{}    <span class="cm">// → NaN (ToPrimitive({}) = "[object Object]" → NaN)</span>
+<span class="op">+</span><span class="str">""</span>    <span class="cm">// → 0   (ToNumber("") = 0)</span>
+<span class="op">+</span><span class="str">"3"</span>   <span class="cm">// → 3   (ToNumber("3") = 3)</span>
+<span class="op">+</span><span class="kw">null</span>  <span class="cm">// → 0   (ToNumber(null) = 0)</span>
+<span class="op">+</span><span class="kw">undefined</span> <span class="cm">// → NaN</span></code></pre>
+  </div>
+
+  <div class="wtf-box" style="margin-bottom:16px">
+    <div class="wtf-title">5. The sort() trap</div>
+    <pre style="margin:0;background:var(--amber-bg);border-color:var(--amber)"><code>[<span class="num">10</span>, <span class="num">9</span>, <span class="num">2</span>, <span class="num">1</span>, <span class="num">100</span>].sort()
+<span class="cm">// → [1, 10, 100, 2, 9]  (lexicographic! "10" < "2")</span>
+
+[<span class="num">10</span>, <span class="num">9</span>, <span class="num">2</span>, <span class="num">1</span>, <span class="num">100</span>].sort((a, b) => a - b)
+<span class="cm">// → [1, 2, 9, 10, 100]  (numeric comparator — correct)</span></code></pre>
+  </div>
+
+  <div class="callout callout-success" style="margin-top:28px">
+    <div class="callout-title">Summary — golden rules</div>
+    <ol style="margin-left:20px;line-height:2;font-size:14px">
+      <li>Use <code>===</code> instead of <code>==</code> (except for <code>x == null</code>)</li>
+      <li>Use <code>Number.isNaN()</code> not <code>isNaN()</code></li>
+      <li>Use explicit coercion — <code>Number(x)</code>, <code>String(x)</code>, <code>Boolean(x)</code></li>
+      <li>Always pass a radix to <code>parseInt()</code></li>
+      <li>Always pass a comparator to <code>.sort()</code> for numbers</li>
+      <li>Check for <code>null</code>/<code>undefined</code> explicitly before arithmetic</li>
+    </ol>
+  </div>
+</section>
+
+</main>
+</div>
+
+<button class="scrolltop" id="scrolltop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+function toggleCard(head) {
+  head.classList.toggle('open');
+  const body = head.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+function switchTab(btn, id) {
+  btn.closest('.tabs').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const section = btn.closest('section') || document;
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+}
+
+function setActive(link) {
+  document.querySelectorAll('.nav-item').forEach(l => l.classList.remove('active'));
+  link.classList.add('active');
+}
+
+function evalExpr() {
+  const input = document.getElementById('repl-input').value.trim();
+  if (!input) return;
+  const output = document.getElementById('repl-output');
+  try {
+    const result = eval(input);
+    const type = typeof result;
+    let display = '';
+    if (result === null) display = 'null';
+    else if (result === undefined) display = 'undefined';
+    else if (typeof result === 'string') display = JSON.stringify(result);
+    else if (typeof result === 'object') {
+      try { display = JSON.stringify(result); } catch(e) { display = String(result); }
+    } else display = String(result);
+    output.textContent = `${input}\n// → ${display}\n// type: ${result === null ? 'null' : typeof result}`;
+    output.style.color = 'var(--teal)';
+  } catch(e) {
+    output.textContent = `${input}\n// ✗ ${e.message}`;
+    output.style.color = 'var(--red)';
+  }
+}
+
+function runQuick(expr) {
+  document.getElementById('repl-input').value = expr;
+  evalExpr();
+  document.getElementById('playground').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+window.addEventListener('scroll', () => {
+  const btn = document.getElementById('scrolltop');
+  btn.classList.toggle('visible', window.scrollY > 400);
+});
+
+// Intersection observer for active nav
+const sections = document.querySelectorAll('section[id]');
+const navItems = document.querySelectorAll('.nav-item');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      navItems.forEach(item => {
+        item.classList.toggle('active', item.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { rootMargin: '-20% 0px -60% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
