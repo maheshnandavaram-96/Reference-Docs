@@ -504,6 +504,175 @@
   .highlight-cell { background: rgba(0,212,255,0.15) !important; color: var(--accent) !important; font-weight: 700; }
   .match-cell { background: rgba(107,203,119,0.15) !important; color: var(--green) !important; }
   .filter-cell { background: rgba(248,113,113,0.1) !important; color: var(--red) !important; }
+
+  /* ===== CUSTOM TABLE BUILDER ===== */
+  #custom-tables-panel { grid-column: 1 / -1; }
+
+  .tab-bar {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    overflow-x: auto;
+  }
+  .tab-btn {
+    padding: 10px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); background: rgba(0,212,255,0.06); }
+
+  .tab-content { display: none; padding: 16px; }
+  .tab-content.active { display: block; }
+
+  /* SQL DDL input */
+  textarea#ddl-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--accent4);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 14px;
+    resize: vertical;
+    min-height: 160px;
+    outline: none;
+    line-height: 1.7;
+  }
+  textarea#ddl-input:focus { border-color: var(--accent); }
+
+  /* CSV builder */
+  .csv-builder { display: flex; flex-direction: column; gap: 12px; }
+  .csv-row-top { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+  input.tbl-name-input {
+    padding: 7px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    width: 180px;
+  }
+  input.tbl-name-input:focus { border-color: var(--accent); }
+
+  .csv-grid-wrap { overflow-x: auto; }
+
+  table.csv-editor {
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    min-width: 100%;
+  }
+  table.csv-editor th { padding: 0; }
+  table.csv-editor td { padding: 2px; }
+
+  table.csv-editor input {
+    padding: 6px 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    width: 120px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  table.csv-editor input:focus { border-color: var(--accent); }
+  table.csv-editor input.col-header { color: var(--accent); font-weight: 700; }
+
+  .del-row-btn, .del-col-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .del-row-btn:hover, .del-col-btn:hover { color: var(--red); background: rgba(248,113,113,0.1); }
+
+  .small-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .small-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .small-btn.green { border-color: var(--green); color: var(--green); background: rgba(74,222,128,0.08); }
+  .small-btn.green:hover { background: rgba(74,222,128,0.15); }
+  .small-btn.red { border-color: var(--red); color: var(--red); background: rgba(248,113,113,0.08); }
+  .small-btn.red:hover { background: rgba(248,113,113,0.15); }
+
+  /* Active tables list */
+  .tables-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .table-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    cursor: default;
+    transition: all 0.2s;
+  }
+  .table-chip.custom { border-color: var(--accent3); color: var(--accent3); background: rgba(167,139,250,0.08); }
+  .table-chip.builtin { border-color: var(--border); color: var(--text-dim); }
+  .table-chip .chip-del { cursor: pointer; font-size: 12px; opacity: 0.5; margin-left: 2px; }
+  .table-chip .chip-del:hover { opacity: 1; color: var(--red); }
+
+  .success-msg {
+    padding: 10px 14px;
+    background: rgba(74,222,128,0.08);
+    border: 1px solid rgba(74,222,128,0.25);
+    border-radius: 6px;
+    color: var(--green);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    margin-top: 10px;
+    display: none;
+  }
+  .success-msg.visible { display: block; animation: fadeSlide 0.3s ease; }
+
+  .col-type-hint { font-size: 10px; color: var(--text-dim); text-align: center; padding: 2px 0; font-family: 'JetBrains Mono', monospace; }
+
+  .ddl-example {
+    padding: 10px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    margin-bottom: 12px;
+    white-space: pre;
+    overflow-x: auto;
+  }
 </style>
 </head>
 <body>
@@ -534,6 +703,68 @@ FROM employees
 ORDER BY salary DESC
 LIMIT 5</textarea>
       <button class="run-btn" onclick="runQuery()">▶ VISUALIZE EXECUTION</button>
+    </div>
+
+    <!-- Custom Tables Panel -->
+    <div class="panel" id="custom-tables-panel" style="grid-column:1/-1">
+      <div class="panel-header"><span class="dot"></span> TABLE MANAGER — DEFINE YOUR OWN DATA</div>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('visual')">🧩 Visual Builder</button>
+        <button class="tab-btn" onclick="switchTab('sql')">💾 SQL (CREATE + INSERT)</button>
+        <button class="tab-btn" onclick="switchTab('csv')">📋 Paste CSV</button>
+        <button class="tab-btn" onclick="switchTab('active')">📦 Active Tables</button>
+      </div>
+      <div class="tab-content active" id="tab-visual">
+        <div class="csv-builder">
+          <div class="csv-row-top">
+            <span class="label">TABLE NAME:</span>
+            <input class="tbl-name-input" id="visual-tbl-name" placeholder="my_table" value="my_table" />
+            <button class="small-btn" onclick="addVisualCol()">+ Column</button>
+            <button class="small-btn" onclick="addVisualRow()">+ Row</button>
+            <button class="small-btn green" onclick="saveVisualTable()">✓ Save Table</button>
+            <button class="small-btn" onclick="clearVisualTable()">Clear</button>
+          </div>
+          <div class="csv-grid-wrap">
+            <table class="csv-editor" id="visual-grid"></table>
+          </div>
+          <div class="success-msg" id="visual-success"></div>
+        </div>
+      </div>
+      <div class="tab-content" id="tab-sql">
+        <div class="ddl-example">-- Example:
+CREATE TABLE products (id INT, name TEXT, price FLOAT, category TEXT);
+INSERT INTO products VALUES (1, 'Laptop', 999.99, 'Electronics');
+INSERT INTO products VALUES (2, 'Chair', 149.00, 'Furniture');
+INSERT INTO products VALUES (3, 'Phone', 699.00, 'Electronics');</div>
+        <textarea id="ddl-input" placeholder="Paste your CREATE TABLE and INSERT INTO statements here..."></textarea>
+        <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+          <button class="small-btn green" onclick="parseDDL()">✓ Load Tables from SQL</button>
+          <button class="small-btn" onclick="document.getElementById('ddl-input').value=''">Clear</button>
+        </div>
+        <div class="success-msg" id="ddl-success"></div>
+      </div>
+      <div class="tab-content" id="tab-csv">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+          <span class="label">TABLE NAME:</span>
+          <input class="tbl-name-input" id="csv-tbl-name" placeholder="csv_table" value="csv_table" />
+        </div>
+        <div class="ddl-example">-- First row = column headers, comma-separated:
+id,product,price,qty
+1,Apple,0.99,100
+2,Banana,0.50,200
+3,Cherry,2.99,50</div>
+        <textarea id="csv-input" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--accent4);font-family:'JetBrains Mono',monospace;font-size:13px;padding:14px;resize:vertical;min-height:120px;outline:none;line-height:1.7;" placeholder="id,name,value&#10;1,Alice,100&#10;2,Bob,200"></textarea>
+        <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+          <button class="small-btn green" onclick="parseCSVTable()">✓ Load CSV Table</button>
+          <button class="small-btn" onclick="document.getElementById('csv-input').value='';document.getElementById('csv-tbl-name').value='csv_table'">Clear</button>
+        </div>
+        <div class="success-msg" id="csv-success"></div>
+      </div>
+      <div class="tab-content" id="tab-active">
+        <div style="margin-bottom:10px;font-size:12px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;">All tables available for use in queries. Custom tables shown in purple.</div>
+        <div class="tables-list" id="active-tables-list"></div>
+        <div id="table-preview" style="margin-top:16px"></div>
+      </div>
     </div>
 
     <!-- Execution Order -->
@@ -1433,8 +1664,233 @@ function stopAutoPlay() {
   document.getElementById('btn-play').textContent = '▶ AUTO PLAY';
 }
 
+// =================== CUSTOM TABLE BUILDER ===================
+
+const CUSTOM_TABLES = new Set();
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'active') renderActiveTablesList();
+}
+
+let visualCols = ['id','name','value'];
+let visualRows = [['1','Alice','100'],['2','Bob','200'],['3','Carol','300']];
+
+function renderVisualGrid() {
+  const grid = document.getElementById('visual-grid');
+  let html = '<thead><tr><th></th>';
+  visualCols.forEach((col, ci) => {
+    html += `<th>
+      <input class="col-header" value="${col}" onchange="visualCols[${ci}]=this.value" placeholder="col_name" />
+      <div class="col-type-hint">column ${ci+1}</div>
+    </th>`;
+  });
+  html += `<th><button class="del-col-btn" title="Remove last col" onclick="removeVisualCol()">-col</button></th></tr></thead><tbody>`;
+  visualRows.forEach((row, ri) => {
+    html += `<tr><td><button class="del-row-btn" onclick="removeVisualRow(${ri})">x</button></td>`;
+    visualCols.forEach((_, ci) => {
+      const val = row[ci] !== undefined ? String(row[ci]).replace(/"/g,'&quot;') : '';
+      html += `<td><input value="${val}" onchange="visualRows[${ri}][${ci}]=this.value" placeholder="value" /></td>`;
+    });
+    html += '</tr>';
+  });
+  html += `<tr><td colspan="${visualCols.length + 2}" style="padding:8px 0"><button class="small-btn" onclick="addVisualRow()" style="width:100%">+ Add Row</button></td></tr>`;
+  html += '</tbody>';
+  grid.innerHTML = html;
+}
+
+function addVisualCol() {
+  visualCols.push('col' + (visualCols.length + 1));
+  visualRows.forEach(r => r.push(''));
+  renderVisualGrid();
+}
+function removeVisualCol() {
+  if (visualCols.length <= 1) return;
+  visualCols.pop();
+  visualRows.forEach(r => r.pop());
+  renderVisualGrid();
+}
+function addVisualRow() {
+  visualRows.push(new Array(visualCols.length).fill(''));
+  renderVisualGrid();
+}
+function removeVisualRow(ri) {
+  visualRows.splice(ri, 1);
+  renderVisualGrid();
+}
+function clearVisualTable() {
+  visualCols = ['id','name','value'];
+  visualRows = [['','','']];
+  renderVisualGrid();
+}
+function saveVisualTable() {
+  const grid = document.getElementById('visual-grid');
+  const headerInputs = grid.querySelectorAll('thead input.col-header');
+  headerInputs.forEach((inp, ci) => { visualCols[ci] = inp.value.trim() || ('col'+(ci+1)); });
+  const bodyRows = grid.querySelectorAll('tbody tr');
+  bodyRows.forEach((tr, ri) => {
+    if (ri >= visualRows.length) return;
+    const inputs = tr.querySelectorAll('input');
+    inputs.forEach((inp, ci) => { if (visualRows[ri]) visualRows[ri][ci] = inp.value; });
+  });
+  const name = document.getElementById('visual-tbl-name').value.trim().toLowerCase() || 'my_table';
+  if (!name.match(/^[a-z_][a-z0-9_]*$/)) { showMsg('visual-success','Table name must be letters/numbers/underscore only', true); return; }
+  const cols = visualCols.map(c => c.trim().toLowerCase() || 'col');
+  const data = visualRows
+    .filter(r => r.some(v => String(v).trim() !== ''))
+    .map(r => {
+      const obj = {};
+      cols.forEach((c, i) => {
+        const raw = r[i] !== undefined ? String(r[i]).trim() : '';
+        obj[c] = raw === '' ? null : (isNaN(raw) ? raw : Number(raw));
+      });
+      return obj;
+    });
+  if (data.length === 0) { showMsg('visual-success','No rows to save!', true); return; }
+  DB[name] = data;
+  CUSTOM_TABLES.add(name);
+  showMsg('visual-success', 'Table "' + name + '" saved  ' + data.length + ' rows, ' + cols.length + ' columns. Use with: FROM ' + name);
+  renderActiveTablesList();
+}
+
+function parseDDL() {
+  const raw = document.getElementById('ddl-input').value;
+  if (!raw.trim()) { showMsg('ddl-success','Nothing to parse', true); return; }
+  const tableSchemas = {};
+  const tableData = {};
+  const createRegex = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)\s*\(([^)]+)\)/gi;
+  let m;
+  while ((m = createRegex.exec(raw)) !== null) {
+    const tname = m[1].toLowerCase();
+    const colDefs = m[2].split(',').map(c => {
+      const parts = c.trim().split(/\s+/);
+      return parts[0].replace(/[`"[\]]/g,'').toLowerCase();
+    }).filter(c => c && !['primary','unique','key','index','constraint','foreign'].includes(c));
+    tableSchemas[tname] = colDefs;
+    tableData[tname] = [];
+  }
+  const insertRegex = /INSERT\s+INTO\s+(\w+)\s*(?:\(([^)]+)\))?\s*VALUES\s*\(([^)]+)\)/gi;
+  while ((m = insertRegex.exec(raw)) !== null) {
+    const tname = m[1].toLowerCase();
+    const colList = m[2] ? m[2].split(',').map(c => c.trim().replace(/[`"[\]]/g,'').toLowerCase()) : (tableSchemas[tname] || []);
+    const valList = parseValueList(m[3]);
+    if (!tableData[tname]) tableData[tname] = [];
+    if (!tableSchemas[tname]) tableSchemas[tname] = colList;
+    const row = {};
+    const cols = colList.length > 0 ? colList : tableSchemas[tname];
+    cols.forEach((c, i) => { row[c] = valList[i] !== undefined ? valList[i] : null; });
+    tableData[tname].push(row);
+  }
+  const loaded = Object.keys(tableData).filter(t => tableData[t].length > 0);
+  if (loaded.length === 0) { showMsg('ddl-success','No valid INSERT statements found. Check your SQL syntax.', true); return; }
+  for (const t of loaded) { DB[t] = tableData[t]; CUSTOM_TABLES.add(t); }
+  showMsg('ddl-success', 'Loaded ' + loaded.length + ' table(s): ' + loaded.map(t => '"'+t+'" ('+tableData[t].length+' rows)').join(', '));
+  renderActiveTablesList();
+}
+
+function parseValueList(str) {
+  const vals = [];
+  let cur = '', inStr = false, strChar = '';
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+    if (inStr) { if (ch === strChar) inStr = false; else cur += ch; }
+    else if (ch === "'" || ch === '"') { inStr = true; strChar = ch; }
+    else if (ch === ',') { vals.push(parseRawVal(cur.trim())); cur = ''; }
+    else { cur += ch; }
+  }
+  if (cur.trim()) vals.push(parseRawVal(cur.trim()));
+  return vals;
+}
+function parseRawVal(v) {
+  if (v === 'NULL' || v === 'null') return null;
+  if (v !== '' && !isNaN(v)) return Number(v);
+  return v;
+}
+
+function parseCSVTable() {
+  const raw = document.getElementById('csv-input').value.trim();
+  const name = document.getElementById('csv-tbl-name').value.trim().toLowerCase() || 'csv_table';
+  if (!raw) { showMsg('csv-success','Nothing to parse', true); return; }
+  if (!name.match(/^[a-z_][a-z0-9_]*$/)) { showMsg('csv-success','Invalid table name', true); return; }
+  const lines = raw.split('\n').map(l => l.trim()).filter(l => l);
+  if (lines.length < 2) { showMsg('csv-success','Need at least a header row and one data row', true); return; }
+  const headers = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase().replace(/\s+/g,'_'));
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = parseCSVLine(lines[i]);
+    const row = {};
+    headers.forEach((h, j) => {
+      const v = vals[j] !== undefined ? vals[j].trim() : null;
+      row[h] = v === null || v === '' ? null : (!isNaN(v) ? Number(v) : v);
+    });
+    rows.push(row);
+  }
+  DB[name] = rows;
+  CUSTOM_TABLES.add(name);
+  showMsg('csv-success', 'Table "' + name + '" loaded  ' + rows.length + ' rows, ' + headers.length + ' columns. Use with: FROM ' + name);
+  renderActiveTablesList();
+}
+
+function parseCSVLine(line) {
+  const vals = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"' && !inQ) { inQ = true; }
+    else if (ch === '"' && inQ) { inQ = false; }
+    else if (ch === ',' && !inQ) { vals.push(cur); cur = ''; }
+    else { cur += ch; }
+  }
+  vals.push(cur);
+  return vals;
+}
+
+function renderActiveTablesList() {
+  const list = document.getElementById('active-tables-list');
+  if (!list) return;
+  list.innerHTML = '';
+  for (const tname of Object.keys(DB)) {
+    const isCustom = CUSTOM_TABLES.has(tname);
+    const chip = document.createElement('div');
+    chip.className = 'table-chip ' + (isCustom ? 'custom' : 'builtin');
+    chip.innerHTML = '<span onclick="previewTable(\''+tname+'\');" style="cursor:pointer" title="Click to preview">' + tname + ' <span style="opacity:0.5">('+DB[tname].length+')</span></span>';
+    if (isCustom) {
+      const del = document.createElement('span');
+      del.className = 'chip-del';
+      del.textContent = 'x';
+      del.title = 'Remove table';
+      del.onclick = () => { delete DB[tname]; CUSTOM_TABLES.delete(tname); renderActiveTablesList(); document.getElementById('table-preview').innerHTML=''; };
+      chip.appendChild(del);
+    }
+    list.appendChild(chip);
+  }
+}
+
+function previewTable(name) {
+  const data = DB[name];
+  if (!data) return;
+  const preview = document.getElementById('table-preview');
+  preview.innerHTML = '<div class="table-label" style="color:var(--accent);margin-bottom:6px">PREVIEW: ' + name + ' (' + data.length + ' rows)</div>' + buildTable(data.slice(0,10)) + (data.length > 10 ? '<div style="font-size:11px;color:var(--text-dim);padding:4px;font-family:JetBrains Mono,monospace">...and '+(data.length-10)+' more rows</div>' : '');
+}
+
+function showMsg(id, msg, isError) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.style.background = isError ? 'rgba(248,113,113,0.08)' : 'rgba(74,222,128,0.08)';
+  el.style.borderColor = isError ? 'rgba(248,113,113,0.25)' : 'rgba(74,222,128,0.25)';
+  el.style.color = isError ? 'var(--red)' : 'var(--green)';
+  el.classList.add('visible');
+  setTimeout(() => el.classList.remove('visible'), 5000);
+}
+
 // Auto-run first preset on load
 window.onload = () => {
+  renderVisualGrid();
+  renderActiveTablesList();
   setTimeout(() => {
     runQuery();
     nextStep();
