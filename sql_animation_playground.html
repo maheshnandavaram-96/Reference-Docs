@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL Playground — Live Query Visualizer</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --accent3: #a78bfa;
+    --accent4: #34d399;
+    --accent5: #fbbf24;
+    --text: #e2e8f0;
+    --text-dim: #64748b;
+    --text-muted: #94a3b8;
+    --red: #f87171;
+    --green: #4ade80;
+    --blue: #60a5fa;
+    --purple: #c084fc;
+    --orange: #fb923c;
+    --cyan: #22d3ee;
+    --yellow: #facc15;
+
+    /* Clause colors */
+    --c-from:    #ff6b6b;
+    --c-join:    #ffd93d;
+    --c-where:   #6bcb77;
+    --c-groupby: #4d96ff;
+    --c-having:  #c77dff;
+    --c-select:  #00b4d8;
+    --c-orderby: #ff9f1c;
+    --c-limit:   #f72585;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+  /* Header */
+  header {
+    text-align: center;
+    padding: 30px 20px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  header h1 {
+    font-size: clamp(24px, 4vw, 44px);
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent3), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -1px;
+    margin-bottom: 6px;
+  }
+  header p { color: var(--text-dim); font-size: 14px; font-family: 'JetBrains Mono', monospace; }
+
+  /* Layout */
+  .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media(max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-header .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulse 2s infinite; }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* Editor */
+  .editor-panel { grid-column: 1 / -1; }
+
+  .editor-toolbar {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .preset-btn {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .preset-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,0.08); }
+  .preset-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,0.12); }
+
+  .label { font-size: 11px; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; margin-right: 4px; }
+
+  textarea#sql-input {
+    width: 100%;
+    background: var(--bg);
+    border: none;
+    color: var(--accent4);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    padding: 16px;
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+    line-height: 1.6;
+    letter-spacing: 0.3px;
+  }
+
+  .run-btn {
+    display: block;
+    width: calc(100% - 32px);
+    margin: 12px 16px;
+    padding: 12px;
+    background: linear-gradient(135deg, #00b4d8, #0077b6);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .run-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,180,216,0.4); }
+  .run-btn:active { transform: translateY(0); }
+
+  /* Execution order */
+  #execution-order {
+    grid-column: 1 / -1;
+    padding: 16px;
+  }
+
+  .exec-title { font-size: 11px; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+
+  .exec-steps {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .exec-step {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    border: 2px solid transparent;
+    opacity: 0.3;
+    transition: all 0.4s;
+    position: relative;
+  }
+  .exec-step.active {
+    opacity: 1;
+    transform: scale(1.08);
+    box-shadow: 0 0 16px currentColor;
+  }
+  .exec-step.done { opacity: 0.6; }
+
+  .exec-step[data-clause="FROM"]    { color: var(--c-from);    border-color: var(--c-from);    background: rgba(255,107,107,0.1); }
+  .exec-step[data-clause="JOIN"]    { color: var(--c-join);    border-color: var(--c-join);    background: rgba(255,217,61,0.1); }
+  .exec-step[data-clause="WHERE"]   { color: var(--c-where);   border-color: var(--c-where);   background: rgba(107,203,119,0.1); }
+  .exec-step[data-clause="GROUP BY"]{ color: var(--c-groupby); border-color: var(--c-groupby); background: rgba(77,150,255,0.1); }
+  .exec-step[data-clause="HAVING"]  { color: var(--c-having);  border-color: var(--c-having);  background: rgba(199,125,255,0.1); }
+  .exec-step[data-clause="SELECT"]  { color: var(--c-select);  border-color: var(--c-select);  background: rgba(0,180,216,0.1); }
+  .exec-step[data-clause="ORDER BY"]{ color: var(--c-orderby); border-color: var(--c-orderby); background: rgba(255,159,28,0.1); }
+  .exec-step[data-clause="LIMIT"]   { color: var(--c-limit);   border-color: var(--c-limit);   background: rgba(247,37,133,0.1); }
+
+  .exec-arrow { color: var(--text-dim); font-size: 14px; }
+
+  /* Animation stage */
+  #animation-stage {
+    grid-column: 1 / -1;
+    min-height: 300px;
+    padding: 16px;
+    position: relative;
+  }
+
+  .stage-step {
+    display: none;
+    animation: fadeSlide 0.4s ease;
+  }
+  .stage-step.visible { display: block; }
+
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .step-badge {
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .step-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    flex-shrink: 0;
+  }
+
+  .step-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+
+  /* Tables */
+  .table-container { overflow-x: auto; margin: 10px 0; }
+
+  table.sql-table {
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  table.sql-table th {
+    background: var(--surface2);
+    padding: 8px 14px;
+    text-align: left;
+    font-weight: 600;
+    letter-spacing: 1px;
+    font-size: 11px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  table.sql-table td {
+    padding: 7px 14px;
+    border-top: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  table.sql-table tr:hover td { background: rgba(255,255,255,0.03); }
+
+  .row-highlight { animation: rowFade 0.5s ease; }
+  @keyframes rowFade {
+    from { background: rgba(0,212,255,0.2); }
+    to { background: transparent; }
+  }
+
+  .row-filtered { opacity: 0.25; text-decoration: line-through; }
+  .row-kept { background: rgba(107,203,119,0.08); }
+  .row-new { background: rgba(0,212,255,0.08); animation: rowFade 0.6s ease; }
+
+  /* Join diagram */
+  .join-diagram {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+    flex-wrap: wrap;
+  }
+
+  .join-circle {
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    border: 3px solid;
+    position: relative;
+  }
+
+  .join-circle.left  { border-color: var(--c-from);  background: rgba(255,107,107,0.15); color: var(--c-from); }
+  .join-circle.right { border-color: var(--c-join);  background: rgba(255,217,61,0.15);  color: var(--c-join); }
+
+  .join-overlap {
+    display: flex;
+    align-items: center;
+    position: relative;
+    width: 140px;
+  }
+
+  .join-circle.left-v  { margin-right: -30px; z-index: 1; width: 90px; height: 90px; }
+  .join-circle.right-v { margin-left: -30px; z-index: 1; width: 90px; height: 90px; }
+
+  .join-label { font-size: 11px; color: var(--text-dim); text-align: center; margin-top: 8px; font-family: 'JetBrains Mono', monospace; }
+
+  /* Controls */
+  .step-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+
+  .ctrl-btn {
+    padding: 8px 18px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .ctrl-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .ctrl-btn.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 700; }
+  .ctrl-btn.primary:hover { background: #00b4d8; }
+
+  .speed-select {
+    padding: 7px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  /* Result panel */
+  #result-panel {
+    grid-column: 1 / -1;
+    padding: 16px;
+    display: none;
+  }
+  #result-panel.visible { display: block; }
+
+  .result-title {
+    font-size: 11px;
+    color: var(--accent4);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  /* Clause legend */
+  .legend {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 14px 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* Error */
+  .error-msg {
+    padding: 12px 16px;
+    background: rgba(248,113,113,0.1);
+    border: 1px solid rgba(248,113,113,0.3);
+    border-radius: 8px;
+    color: var(--red);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    margin: 10px 0;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Tags in desc */
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    margin: 0 2px;
+  }
+
+  .tables-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin: 10px 0;
+  }
+
+  .table-label {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    padding-left: 2px;
+  }
+
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 8px 0 16px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  /* Tooltip */
+  .tooltip-wrap { position: relative; display: inline-block; }
+  .tooltip-wrap:hover .tooltip { display: block; }
+  .tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    z-index: 100;
+    font-family: 'JetBrains Mono', monospace;
+    pointer-events: none;
+  }
+
+  .inline-table-wrap { display: flex; gap: 16px; flex-wrap: wrap; }
+
+  .highlight-cell { background: rgba(0,212,255,0.15) !important; color: var(--accent) !important; font-weight: 700; }
+  .match-cell { background: rgba(107,203,119,0.15) !important; color: var(--green) !important; }
+  .filter-cell { background: rgba(248,113,113,0.1) !important; color: var(--red) !important; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>⚡ SQL Query Visualizer</h1>
+    <p>// watch your query execute — clause by clause, row by row</p>
+  </header>
+
+  <div class="layout">
+
+    <!-- Editor -->
+    <div class="panel editor-panel">
+      <div class="panel-header"><span class="dot"></span> SQL QUERY INPUT</div>
+      <div class="editor-toolbar">
+        <span class="label">PRESETS:</span>
+        <button class="preset-btn active" onclick="loadPreset('basic')">Basic SELECT</button>
+        <button class="preset-btn" onclick="loadPreset('where')">WHERE Filter</button>
+        <button class="preset-btn" onclick="loadPreset('join')">INNER JOIN</button>
+        <button class="preset-btn" onclick="loadPreset('leftjoin')">LEFT JOIN</button>
+        <button class="preset-btn" onclick="loadPreset('groupby')">GROUP BY</button>
+        <button class="preset-btn" onclick="loadPreset('having')">HAVING</button>
+        <button class="preset-btn" onclick="loadPreset('full')">Full Query</button>
+      </div>
+      <textarea id="sql-input" rows="3">SELECT name, department, salary
+FROM employees
+ORDER BY salary DESC
+LIMIT 5</textarea>
+      <button class="run-btn" onclick="runQuery()">▶ VISUALIZE EXECUTION</button>
+    </div>
+
+    <!-- Execution Order -->
+    <div class="panel" style="grid-column:1/-1;">
+      <div class="panel-header"><span class="dot"></span> EXECUTION ORDER</div>
+      <div id="execution-order">
+        <div class="exec-steps" id="exec-steps-container"></div>
+        <div class="progress-bar" style="margin-top:12px"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- Animation Stage -->
+    <div class="panel" style="grid-column:1/-1;">
+      <div class="panel-header"><span class="dot"></span> STEP-BY-STEP ANIMATION</div>
+      <div id="animation-stage" style="padding:16px">
+        <div style="text-align:center;padding:40px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;font-size:13px;">
+          Enter a SQL query above and click <span style="color:var(--accent)">VISUALIZE EXECUTION</span> to see the magic ✨
+        </div>
+      </div>
+      <div class="step-controls" style="padding:0 16px 16px;">
+        <button class="ctrl-btn primary" id="btn-play" onclick="autoPlay()" disabled>▶ AUTO PLAY</button>
+        <button class="ctrl-btn" id="btn-prev" onclick="prevStep()" disabled>← PREV</button>
+        <button class="ctrl-btn" id="btn-next" onclick="nextStep()" disabled>NEXT →</button>
+        <button class="ctrl-btn" id="btn-reset" onclick="resetAnimation()" disabled>⟳ RESET</button>
+        <select class="speed-select" id="speed-select">
+          <option value="2000">Slow</option>
+          <option value="1200" selected>Normal</option>
+          <option value="600">Fast</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Result Panel -->
+    <div class="panel" id="result-panel" style="grid-column:1/-1">
+      <div class="panel-header"><span class="dot"></span> FINAL RESULT SET</div>
+      <div style="padding:16px">
+        <div class="result-title">✓ QUERY RESULT</div>
+        <div id="result-table-container"></div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="panel" style="grid-column:1/-1">
+      <div class="panel-header"><span class="dot"></span> CLAUSE LEGEND</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--c-from)"></div><span>1. FROM — Load source table</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--c-join)"></div><span>2. JOIN — Combine tables</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--c-where)"></div><span>3. WHERE — Filter rows</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--c-groupby)"></div><span>4. GROUP BY — Aggregate</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--c-having)"></div><span>5. HAVING — Filter groups</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--c-select)"></div><span>6. SELECT — Pick columns</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--c-orderby)"></div><span>7. ORDER BY — Sort rows</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--c-limit)"></div><span>8. LIMIT — Restrict count</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// =================== DATA ===================
+const DB = {
+  employees: [
+    {id:1, name:'Alice',   department:'Engineering', salary:95000, manager_id:null,  age:32},
+    {id:2, name:'Bob',     department:'Marketing',   salary:72000, manager_id:5,     age:28},
+    {id:3, name:'Carol',   department:'Engineering', salary:88000, manager_id:1,     age:35},
+    {id:4, name:'Dave',    department:'HR',          salary:61000, manager_id:5,     age:41},
+    {id:5, name:'Eve',     department:'Management',  salary:120000,manager_id:null,  age:45},
+    {id:6, name:'Frank',   department:'Marketing',   salary:68000, manager_id:2,     age:30},
+    {id:7, name:'Grace',   department:'Engineering', salary:91000, manager_id:1,     age:29},
+    {id:8, name:'Hank',    department:'HR',          salary:58000, manager_id:4,     age:38},
+    {id:9, name:'Ivy',     department:'Marketing',   salary:75000, manager_id:2,     age:26},
+    {id:10,name:'Jake',    department:'Engineering', salary:83000, manager_id:3,     age:33},
+  ],
+  departments: [
+    {dept_id:1, dept_name:'Engineering', budget:500000, location:'NYC'},
+    {dept_id:2, dept_name:'Marketing',   budget:200000, location:'LA'},
+    {dept_id:3, dept_name:'HR',          budget:150000, location:'Chicago'},
+    {dept_id:4, dept_name:'Management',  budget:300000, location:'NYC'},
+    {dept_id:5, dept_name:'Finance',     budget:250000, location:'Boston'},
+  ],
+  orders: [
+    {order_id:101, customer:'Alice', amount:1200, status:'completed'},
+    {order_id:102, customer:'Bob',   amount:450,  status:'pending'},
+    {order_id:103, customer:'Carol', amount:890,  status:'completed'},
+    {order_id:104, customer:'Alice', amount:320,  status:'cancelled'},
+    {order_id:105, customer:'Dave',  amount:2100, status:'completed'},
+  ]
+};
+
+// =================== PRESETS ===================
+const PRESETS = {
+  basic: `SELECT name, department, salary\nFROM employees\nORDER BY salary DESC\nLIMIT 5`,
+  where: `SELECT name, department, salary\nFROM employees\nWHERE department = 'Engineering'\nORDER BY salary DESC`,
+  join: `SELECT e.name, e.salary, d.dept_name, d.location\nFROM employees e\nINNER JOIN departments d ON e.department = d.dept_name\nWHERE e.salary > 70000`,
+  leftjoin: `SELECT e.name, e.salary, d.dept_name, d.location\nFROM employees e\nLEFT JOIN departments d ON e.department = d.dept_name`,
+  groupby: `SELECT department, COUNT(*) as headcount, AVG(salary) as avg_salary\nFROM employees\nGROUP BY department\nORDER BY avg_salary DESC`,
+  having: `SELECT department, COUNT(*) as headcount, AVG(salary) as avg_salary\nFROM employees\nGROUP BY department\nHAVING COUNT(*) >= 2\nORDER BY avg_salary DESC`,
+  full: `SELECT department, COUNT(*) as headcount, MAX(salary) as max_salary\nFROM employees\nWHERE age < 40\nGROUP BY department\nHAVING COUNT(*) >= 2\nORDER BY max_salary DESC\nLIMIT 3`,
+};
+
+function loadPreset(key) {
+  document.getElementById('sql-input').value = PRESETS[key];
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+// =================== PARSER ===================
+function parseSQL(sql) {
+  const upper = sql.toUpperCase();
+  const result = {
+    raw: sql,
+    clauses: {},
+    order: []
+  };
+
+  const patterns = {
+    SELECT:   /SELECT\s+([\s\S]+?)\s+FROM/i,
+    FROM:     /FROM\s+(\w+)(?:\s+(?:AS\s+)?(\w+))?/i,
+    JOIN:     /((?:INNER|LEFT|RIGHT|FULL OUTER|CROSS)?\s*JOIN)\s+(\w+)(?:\s+(?:AS\s+)?(\w+))?\s+ON\s+([\s\S]+?)(?=\s+WHERE|\s+GROUP|\s+HAVING|\s+ORDER|\s+LIMIT|$)/i,
+    WHERE:    /WHERE\s+([\s\S]+?)(?=\s+GROUP BY|\s+HAVING|\s+ORDER BY|\s+LIMIT|$)/i,
+    GROUP_BY: /GROUP\s+BY\s+([\s\S]+?)(?=\s+HAVING|\s+ORDER BY|\s+LIMIT|$)/i,
+    HAVING:   /HAVING\s+([\s\S]+?)(?=\s+ORDER BY|\s+LIMIT|$)/i,
+    ORDER_BY: /ORDER\s+BY\s+([\s\S]+?)(?=\s+LIMIT|$)/i,
+    LIMIT:    /LIMIT\s+(\d+)/i,
+  };
+
+  for (const [key, pat] of Object.entries(patterns)) {
+    const m = sql.match(pat);
+    if (m) result.clauses[key] = m;
+  }
+
+  // Determine execution order based on present clauses
+  const execOrder = ['FROM','JOIN','WHERE','GROUP_BY','HAVING','SELECT','ORDER_BY','LIMIT'];
+  for (const c of execOrder) {
+    if (c === 'SELECT') { result.order.push('SELECT'); continue; } // always present
+    if (result.clauses[c]) result.order.push(c);
+  }
+
+  return result;
+}
+
+// =================== STATE ===================
+let steps = [];
+let currentStep = -1;
+let autoPlayTimer = null;
+
+// =================== MAIN ===================
+function runQuery() {
+  const sql = document.getElementById('sql-input').value.trim();
+  if (!sql) return;
+
+  stopAutoPlay();
+  steps = buildSteps(sql);
+  currentStep = -1;
+
+  if (steps.length === 0) {
+    document.getElementById('animation-stage').innerHTML = '<div class="error-msg">⚠ Could not parse query. Please check syntax and try a preset.</div>';
+    return;
+  }
+
+  renderExecSteps(steps);
+  document.getElementById('result-panel').classList.remove('visible');
+
+  // Enable controls
+  ['btn-play','btn-next','btn-reset'].forEach(id => document.getElementById(id).disabled = false);
+  document.getElementById('btn-prev').disabled = true;
+
+  document.getElementById('animation-stage').innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-dim);font-family:\'JetBrains Mono\',monospace;font-size:13px;">Ready! Click <span style="color:var(--accent)">NEXT →</span> or <span style="color:var(--accent)">AUTO PLAY</span> to begin.</div>';
+
+  updateProgress(0);
+}
+
+// =================== STEP BUILDER ===================
+function buildSteps(sql) {
+  const parsed = parseSQL(sql);
+  const steps = [];
+
+  const tableName = parsed.clauses.FROM ? parsed.clauses.FROM[1] : null;
+  const tableAlias = parsed.clauses.FROM ? (parsed.clauses.FROM[2] || parsed.clauses.FROM[1]) : null;
+
+  if (!tableName) return [];
+
+  const sourceData = DB[tableName.toLowerCase()];
+  if (!sourceData) {
+    steps.push({ clause: 'FROM', title: `FROM — Table Not Found`, desc: `Table <strong>${tableName}</strong> not found. Available: ${Object.keys(DB).join(', ')}`, data: [] });
+    return steps;
+  }
+
+  let workingData = JSON.parse(JSON.stringify(sourceData));
+
+  // STEP 1: FROM
+  steps.push({
+    clause: 'FROM',
+    title: `FROM — Load "${tableName}"`,
+    desc: `The engine starts by loading the full <tag style="background:rgba(255,107,107,0.15);color:var(--c-from);padding:2px 8px;border-radius:4px;font-family:JetBrains Mono,monospace;font-size:11px">${tableName}</tag> table into memory. All <strong>${workingData.length} rows</strong> are available for further processing.`,
+    data: JSON.parse(JSON.stringify(workingData)),
+    highlightAll: true,
+  });
+
+  // STEP 2: JOIN
+  if (parsed.clauses.JOIN) {
+    const joinMatch = parsed.clauses.JOIN;
+    const joinType = joinMatch[1].trim().toUpperCase();
+    const joinTable = joinMatch[2];
+    const joinAlias = joinMatch[3] || joinMatch[2];
+    const onClause = joinMatch[4];
+
+    const joinData = DB[joinTable.toLowerCase()];
+    const isLeft = joinType.includes('LEFT');
+
+    let joined = [];
+    if (joinData) {
+      const onParts = onClause.match(/(\w+)\.(\w+)\s*=\s*(\w+)\.(\w+)/i);
+      if (onParts) {
+        const leftField = onParts[2].toLowerCase();
+        const rightField = onParts[4].toLowerCase();
+
+        if (isLeft) {
+          for (const row of workingData) {
+            const matchingRights = joinData.filter(jr => {
+              const lv = String(row[leftField] || '').toLowerCase();
+              const rv = String(jr[rightField] || '').toLowerCase();
+              return lv === rv;
+            });
+            if (matchingRights.length > 0) {
+              for (const jr of matchingRights) {
+                joined.push({...row, ...jr, __matched: true});
+              }
+            } else {
+              const nullRight = {};
+              for (const k of Object.keys(joinData[0]||{})) nullRight[k] = null;
+              joined.push({...row, ...nullRight, __matched: false});
+            }
+          }
+        } else {
+          for (const row of workingData) {
+            const matchingRights = joinData.filter(jr => {
+              const lv = String(row[leftField] || '').toLowerCase();
+              const rv = String(jr[rightField] || '').toLowerCase();
+              return lv === rv;
+            });
+            for (const jr of matchingRights) {
+              joined.push({...row, ...jr, __matched: true});
+            }
+          }
+        }
+      } else {
+        for (const row of workingData) {
+          for (const jr of joinData) joined.push({...row, ...jr, __matched: true});
+        }
+      }
+    }
+
+    workingData = joined.map(r => { const c = {...r}; delete c.__matched; return c; });
+
+    steps.push({
+      clause: 'JOIN',
+      title: `${joinType} — Combine with "${joinTable}"`,
+      desc: `Rows from <tag style="background:rgba(255,107,107,0.15);color:var(--c-from);padding:2px 8px;border-radius:4px;font-family:JetBrains Mono,monospace;font-size:11px">${tableName}</tag> are matched against <tag style="background:rgba(255,217,61,0.15);color:var(--c-join);padding:2px 8px;border-radius:4px;font-family:JetBrains Mono,monospace;font-size:11px">${joinTable}</tag> using the ON condition. ${isLeft ? 'LEFT JOIN keeps all left rows even without a match (NULLs for right columns).' : 'INNER JOIN only keeps rows with matches on both sides.'} Result: <strong>${workingData.length} rows</strong>.`,
+      data: JSON.parse(JSON.stringify(workingData)),
+      joinInfo: { type: joinType, leftTable: tableName, rightTable: joinTable },
+      leftData: JSON.parse(JSON.stringify(sourceData)),
+      rightData: joinData ? JSON.parse(JSON.stringify(joinData)) : [],
+    });
+  }
+
+  // STEP 3: WHERE
+  if (parsed.clauses.WHERE) {
+    const whereStr = parsed.clauses.WHERE[1].trim();
+    const beforeCount = workingData.length;
+    const { passed, failed } = applyWhere(workingData, whereStr);
+
+    steps.push({
+      clause: 'WHERE',
+      title: `WHERE — Filter Rows`,
+      desc: `Evaluating condition: <code style="background:rgba(107,203,119,0.12);color:var(--c-where);padding:2px 8px;border-radius:4px;font-family:JetBrains Mono,monospace;font-size:12px">${whereStr}</code><br>Each row is tested. <strong style="color:var(--green)">${passed.length} rows pass</strong>, <strong style="color:var(--red)">${failed.length} rows eliminated</strong>.`,
+      passedRows: JSON.parse(JSON.stringify(passed)),
+      failedRows: JSON.parse(JSON.stringify(failed)),
+      data: JSON.parse(JSON.stringify(passed)),
+    });
+
+    workingData = passed;
+  }
+
+  // STEP 4: GROUP BY
+  if (parsed.clauses.GROUP_BY) {
+    const groupField = parsed.clauses.GROUP_BY[1].trim().toLowerCase();
+    const groups = {};
+    for (const row of workingData) {
+      const key = row[groupField] !== undefined ? String(row[groupField]) : 'NULL';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(row);
+    }
+
+    const selectStr = parsed.clauses.SELECT ? parsed.clauses.SELECT[1] : '*';
+    const groupedData = buildGroupedData(groups, groupField, selectStr);
+    workingData = groupedData;
+
+    steps.push({
+      clause: 'GROUP_BY',
+      title: `GROUP BY "${groupField}"`,
+      desc: `Rows with the same <strong>${groupField}</strong> value are collapsed into groups. Aggregate functions (COUNT, SUM, AVG, MAX, MIN) are computed per group. <strong>${Object.keys(groups).length} groups</strong> formed.`,
+      groups: groups,
+      groupField: groupField,
+      data: JSON.parse(JSON.stringify(groupedData)),
+    });
+  }
+
+  // STEP 5: HAVING
+  if (parsed.clauses.HAVING) {
+    const havingStr = parsed.clauses.HAVING[1].trim();
+    const beforeCount = workingData.length;
+    const { passed: hPassed, failed: hFailed } = applyHaving(workingData, havingStr);
+
+    steps.push({
+      clause: 'HAVING',
+      title: `HAVING — Filter Groups`,
+      desc: `Unlike WHERE (which filters rows), HAVING filters <em>groups</em> after aggregation. Condition: <code style="background:rgba(199,125,255,0.12);color:var(--c-having);padding:2px 8px;border-radius:4px;font-family:JetBrains Mono,monospace;font-size:12px">${havingStr}</code><br><strong style="color:var(--green)">${hPassed.length} groups pass</strong>, <strong style="color:var(--red)">${hFailed.length} groups removed</strong>.`,
+      passedRows: JSON.parse(JSON.stringify(hPassed)),
+      failedRows: JSON.parse(JSON.stringify(hFailed)),
+      data: JSON.parse(JSON.stringify(hPassed)),
+    });
+
+    workingData = hPassed;
+  }
+
+  // STEP 6: SELECT
+  const selectStr = parsed.clauses.SELECT ? parsed.clauses.SELECT[1].trim() : '*';
+  const selectedData = applySelect(workingData, selectStr);
+
+  steps.push({
+    clause: 'SELECT',
+    title: `SELECT — Project Columns`,
+    desc: `Now the engine picks only the requested columns: <code style="background:rgba(0,180,216,0.12);color:var(--c-select);padding:2px 8px;border-radius:4px;font-family:JetBrains Mono,monospace;font-size:12px">${selectStr}</code>. All other columns are discarded from the result. <strong>${selectedData.length} rows</strong> remain.`,
+    beforeData: JSON.parse(JSON.stringify(workingData)),
+    data: JSON.parse(JSON.stringify(selectedData)),
+    selectCols: getSelectCols(workingData, selectStr),
+  });
+
+  workingData = selectedData;
+
+  // STEP 7: ORDER BY
+  if (parsed.clauses.ORDER_BY) {
+    const orderStr = parsed.clauses.ORDER_BY[1].trim();
+    const beforeOrder = JSON.parse(JSON.stringify(workingData));
+    const orderedData = applyOrderBy(workingData, orderStr);
+
+    steps.push({
+      clause: 'ORDER_BY',
+      title: `ORDER BY "${orderStr}"`,
+      desc: `The result set is sorted by <strong>${orderStr}</strong>. This is purely for presentation — it doesn't affect the data, only its display order.`,
+      beforeData: beforeOrder,
+      data: JSON.parse(JSON.stringify(orderedData)),
+    });
+
+    workingData = orderedData;
+  }
+
+  // STEP 8: LIMIT
+  if (parsed.clauses.LIMIT) {
+    const n = parseInt(parsed.clauses.LIMIT[1]);
+    const beforeLimit = JSON.parse(JSON.stringify(workingData));
+
+    steps.push({
+      clause: 'LIMIT',
+      title: `LIMIT ${n} — Restrict Output`,
+      desc: `Only the first <strong>${n} rows</strong> of the (now sorted) result are returned. <strong style="color:var(--red)">${Math.max(0, beforeLimit.length - n)} rows truncated</strong>.`,
+      n: n,
+      beforeData: beforeLimit,
+      data: JSON.parse(JSON.stringify(workingData.slice(0, n))),
+    });
+
+    workingData = workingData.slice(0, n);
+  }
+
+  // Final result
+  steps.push({
+    clause: 'RESULT',
+    title: '✓ Final Result Set',
+    desc: `Query complete! <strong>${workingData.length} rows</strong> returned.`,
+    data: JSON.parse(JSON.stringify(workingData)),
+    isFinal: true,
+  });
+
+  return steps;
+}
+
+// =================== DATA HELPERS ===================
+function applyWhere(data, cond) {
+  const passed = [], failed = [];
+  for (const row of data) {
+    if (evalCondition(row, cond)) passed.push(row);
+    else failed.push(row);
+  }
+  return { passed, failed };
+}
+
+function evalCondition(row, cond) {
+  // Support: field = 'val', field > num, field < num, field >= num, field <= num, field != 'val', field LIKE '%val%'
+  cond = cond.trim();
+
+  // Handle AND/OR (simple, left-to-right)
+  const orParts = splitByKeyword(cond, 'OR');
+  if (orParts.length > 1) return orParts.some(p => evalCondition(row, p));
+
+  const andParts = splitByKeyword(cond, 'AND');
+  if (andParts.length > 1) return andParts.every(p => evalCondition(row, p));
+
+  // Handle NOT
+  if (/^NOT\s+/i.test(cond)) return !evalCondition(row, cond.replace(/^NOT\s+/i, ''));
+
+  // LIKE
+  const likeM = cond.match(/^(\w+)\s+LIKE\s+'([^']+)'/i);
+  if (likeM) {
+    const val = String(row[likeM[1].toLowerCase()] || '').toLowerCase();
+    const pattern = likeM[2].toLowerCase().replace(/%/g, '.*').replace(/_/g, '.');
+    return new RegExp('^' + pattern + '$').test(val);
+  }
+
+  // IN
+  const inM = cond.match(/^(\w+)\s+IN\s*\(([^)]+)\)/i);
+  if (inM) {
+    const field = inM[1].toLowerCase();
+    const vals = inM[2].split(',').map(v => v.trim().replace(/^'|'$/g, '').toLowerCase());
+    return vals.includes(String(row[field] || '').toLowerCase());
+  }
+
+  // Comparison
+  const compM = cond.match(/^(\w+)\s*(>=|<=|!=|<>|>|<|=)\s*(?:'([^']*)'|(\d+(?:\.\d+)?))/i);
+  if (compM) {
+    const field = compM[1].toLowerCase();
+    const op = compM[2];
+    const rawVal = compM[3] !== undefined ? compM[3] : parseFloat(compM[4]);
+    const rowVal = row[field];
+    const numericRow = parseFloat(rowVal);
+
+    if (typeof rawVal === 'number' && !isNaN(numericRow)) {
+      return compare(numericRow, op, rawVal);
+    }
+    return compare(String(rowVal || '').toLowerCase(), op, String(rawVal).toLowerCase());
+  }
+
+  return true;
+}
+
+function compare(a, op, b) {
+  switch (op) {
+    case '=':  return a == b;
+    case '!=': case '<>': return a != b;
+    case '>':  return a > b;
+    case '<':  return a < b;
+    case '>=': return a >= b;
+    case '<=': return a <= b;
+  }
+  return true;
+}
+
+function splitByKeyword(cond, kw) {
+  // Split but not inside quotes
+  const regex = new RegExp(`\\s+${kw}\\s+`, 'i');
+  return cond.split(regex).map(s => s.trim());
+}
+
+function buildGroupedData(groups, groupField, selectStr) {
+  const result = [];
+  for (const [key, rows] of Object.entries(groups)) {
+    const agg = {};
+    agg[groupField] = key;
+    agg['count'] = rows.length;
+    agg['headcount'] = rows.length;
+    for (const col of Object.keys(rows[0] || {})) {
+      const vals = rows.map(r => parseFloat(r[col])).filter(v => !isNaN(v));
+      if (vals.length > 0) {
+        agg['avg_' + col] = Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+        agg['sum_' + col] = vals.reduce((a,b)=>a+b,0);
+        agg['max_' + col] = Math.max(...vals);
+        agg['min_' + col] = Math.min(...vals);
+        // Shorthand
+        agg['avg_salary'] = agg['avg_salary'] || agg['avg_' + col];
+        agg['max_salary'] = agg['max_salary'] || agg['max_' + col];
+        agg['min_salary'] = agg['min_salary'] || agg['min_' + col];
+      }
+    }
+    result.push(agg);
+  }
+  return result;
+}
+
+function applyHaving(data, cond) {
+  const passed = [], failed = [];
+  const mapped = data.map(row => {
+    const r = {};
+    for (const [k,v] of Object.entries(row)) r[k.toLowerCase()] = v;
+    return r;
+  });
+  for (let i = 0; i < data.length; i++) {
+    const row = mapped[i];
+    if (evalHavingCondition(row, cond)) passed.push(data[i]);
+    else failed.push(data[i]);
+  }
+  return { passed, failed };
+}
+
+function evalHavingCondition(row, cond) {
+  // Replace COUNT(*), AVG(...), etc.
+  let evalCond = cond
+    .replace(/COUNT\s*\(\s*\*\s*\)/gi, () => String(row['count'] || row['headcount'] || 0))
+    .replace(/COUNT\s*\(\s*\w+\s*\)/gi, () => String(row['count'] || 0))
+    .replace(/AVG\s*\(\s*(\w+)\s*\)/gi, (_,f) => String(row['avg_' + f.toLowerCase()] || 0))
+    .replace(/SUM\s*\(\s*(\w+)\s*\)/gi, (_,f) => String(row['sum_' + f.toLowerCase()] || 0))
+    .replace(/MAX\s*\(\s*(\w+)\s*\)/gi, (_,f) => String(row['max_' + f.toLowerCase()] || 0))
+    .replace(/MIN\s*\(\s*(\w+)\s*\)/gi, (_,f) => String(row['min_' + f.toLowerCase()] || 0));
+  return evalCondition(row, evalCond);
+}
+
+function getSelectCols(data, selectStr) {
+  if (selectStr.trim() === '*') return data.length > 0 ? Object.keys(data[0]) : [];
+  return selectStr.split(',').map(c => {
+    const aliasM = c.trim().match(/(?:\w+\(.*?\)|\w+(?:\.\w+)?)\s+(?:AS\s+)?(\w+)$/i);
+    if (aliasM) return aliasM[1].toLowerCase();
+    return c.trim().replace(/^\w+\./, '').toLowerCase();
+  });
+}
+
+function applySelect(data, selectStr) {
+  if (selectStr.trim() === '*') return data;
+  return data.map(row => {
+    const newRow = {};
+    const parts = selectStr.split(',');
+    for (const part of parts) {
+      const p = part.trim();
+      // Handle alias
+      const aliasM = p.match(/^([\w.*()]+(?:\s+[\w.()]+)*)\s+(?:AS\s+)?(\w+)$/i);
+
+      // Aggregates: COUNT(*), AVG(x), etc.
+      const aggM = p.match(/(COUNT|SUM|AVG|MAX|MIN)\s*\(\s*\*?\s*(\w+)?\s*\)/i);
+      if (aggM) {
+        const fn = aggM[1].toUpperCase();
+        const field = aggM[2] ? aggM[2].toLowerCase() : '*';
+        const alias = aliasM ? aliasM[2].toLowerCase() : (fn.toLowerCase() + '_' + (field || 'all'));
+        const dataField = fn === 'COUNT' ? 'count' : (fn.toLowerCase() + '_' + field);
+        newRow[alias] = row[dataField] !== undefined ? row[dataField] : row[alias] || null;
+        continue;
+      }
+
+      // table.column
+      const dotM = p.match(/^(\w+)\.(\w+)$/);
+      if (dotM) {
+        const col = dotM[2].toLowerCase();
+        const alias2 = aliasM ? aliasM[2].toLowerCase() : col;
+        newRow[alias2] = row[col] !== undefined ? row[col] : null;
+        continue;
+      }
+
+      // plain column
+      const col = p.replace(/\s+AS\s+\w+$/i, '').trim().toLowerCase();
+      const alias3 = aliasM ? aliasM[2].toLowerCase() : col;
+      newRow[alias3] = row[col] !== undefined ? row[col] : null;
+    }
+    return newRow;
+  });
+}
+
+function applyOrderBy(data, orderStr) {
+  const parts = orderStr.split(',').map(p => {
+    const m = p.trim().match(/^(\w+)(?:\s+(ASC|DESC))?$/i);
+    if (m) return { field: m[1].toLowerCase(), dir: (m[2]||'ASC').toUpperCase() };
+    return null;
+  }).filter(Boolean);
+
+  return [...data].sort((a, b) => {
+    for (const part of parts) {
+      const av = a[part.field], bv = b[part.field];
+      const na = parseFloat(av), nb = parseFloat(bv);
+      let cmp = 0;
+      if (!isNaN(na) && !isNaN(nb)) cmp = na - nb;
+      else cmp = String(av || '').localeCompare(String(bv || ''));
+      if (cmp !== 0) return part.dir === 'DESC' ? -cmp : cmp;
+    }
+    return 0;
+  });
+}
+
+// =================== RENDERING ===================
+const clauseColors = {
+  FROM: 'var(--c-from)', JOIN: 'var(--c-join)', WHERE: 'var(--c-where)',
+  GROUP_BY: 'var(--c-groupby)', HAVING: 'var(--c-having)', SELECT: 'var(--c-select)',
+  ORDER_BY: 'var(--c-orderby)', LIMIT: 'var(--c-limit)', RESULT: 'var(--accent4)'
+};
+
+const clauseDisplayNames = {
+  FROM:'FROM', JOIN:'JOIN', WHERE:'WHERE', GROUP_BY:'GROUP BY',
+  HAVING:'HAVING', SELECT:'SELECT', ORDER_BY:'ORDER BY', LIMIT:'LIMIT', RESULT:'RESULT'
+};
+
+function renderExecSteps(steps) {
+  const container = document.getElementById('exec-steps-container');
+  container.innerHTML = '';
+  const nonResult = steps.filter(s => s.clause !== 'RESULT');
+
+  nonResult.forEach((step, i) => {
+    if (i > 0) container.innerHTML += '<span class="exec-arrow">→</span>';
+    const name = clauseDisplayNames[step.clause] || step.clause;
+    container.innerHTML += `<div class="exec-step tooltip-wrap" data-clause="${name}" data-idx="${i}" id="exec-step-${i}">
+      ${name}
+      <span class="tooltip">${step.title}</span>
+    </div>`;
+  });
+}
+
+function updateExecHighlight(stepIdx) {
+  document.querySelectorAll('.exec-step').forEach((el, i) => {
+    el.classList.remove('active', 'done');
+    if (i < stepIdx) el.classList.add('done');
+    else if (i === stepIdx) el.classList.add('active');
+  });
+}
+
+function updateProgress(fraction) {
+  document.getElementById('progress-fill').style.width = (fraction * 100) + '%';
+}
+
+function renderStep(idx) {
+  const step = steps[idx];
+  if (!step) return;
+
+  const stage = document.getElementById('animation-stage');
+  const color = clauseColors[step.clause] || 'var(--accent)';
+  const displayName = clauseDisplayNames[step.clause] || step.clause;
+
+  let html = `<div class="stage-step visible">
+    <div class="step-header">
+      <div class="step-num">${idx + 1}</div>
+      <span class="step-badge" style="background:${color}22;color:${color};border:1.5px solid ${color}">${displayName}</span>
+      <span style="font-size:15px;font-weight:700">${step.title}</span>
+    </div>
+    <div class="step-desc" style="margin-bottom:14px">${step.desc}</div>`;
+
+  if (step.clause === 'FROM') {
+    html += `<div class="table-container">${buildTable(step.data, null, true)}</div>`;
+
+  } else if (step.clause === 'JOIN') {
+    html += buildJoinViz(step);
+
+  } else if (step.clause === 'WHERE' || step.clause === 'HAVING') {
+    html += `<div class="inline-table-wrap">
+      <div style="flex:1;min-width:200px">
+        <div class="table-label" style="color:var(--green)">✓ PASS (${step.passedRows.length} rows)</div>
+        <div class="table-container">${buildTable(step.passedRows, 'kept')}</div>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div class="table-label" style="color:var(--red)">✗ FILTERED OUT (${step.failedRows.length} rows)</div>
+        <div class="table-container">${buildTable(step.failedRows, 'filtered')}</div>
+      </div>
+    </div>`;
+
+  } else if (step.clause === 'GROUP_BY') {
+    html += buildGroupViz(step);
+
+  } else if (step.clause === 'SELECT') {
+    html += buildSelectViz(step);
+
+  } else if (step.clause === 'ORDER_BY') {
+    html += buildOrderViz(step);
+
+  } else if (step.clause === 'LIMIT') {
+    html += buildLimitViz(step);
+
+  } else if (step.clause === 'RESULT') {
+    html += `<div class="table-container">${buildTable(step.data, 'new')}</div>`;
+    document.getElementById('result-table-container').innerHTML = buildTable(step.data, 'new');
+    document.getElementById('result-panel').classList.add('visible');
+  } else {
+    html += `<div class="table-container">${buildTable(step.data)}</div>`;
+  }
+
+  html += '</div>';
+  stage.innerHTML = html;
+
+  // Update exec step highlight (skip RESULT step in the indicator)
+  const indicatorIdx = step.clause === 'RESULT' ? steps.filter(s=>s.clause!=='RESULT').length - 1 : idx;
+  updateExecHighlight(indicatorIdx);
+  updateProgress((idx + 1) / steps.length);
+}
+
+function buildTable(data, rowClass, highlight) {
+  if (!data || data.length === 0) return '<div style="padding:12px;color:var(--text-dim);font-family:JetBrains Mono,monospace;font-size:12px">Empty result set</div>';
+  const cols = Object.keys(data[0]);
+  let t = `<table class="sql-table"><thead><tr>`;
+  for (const c of cols) t += `<th>${c}</th>`;
+  t += '</tr></thead><tbody>';
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i];
+    const cls = rowClass ? `class="${rowClass} ${highlight?'row-highlight':''}"` : (highlight ? `class="row-highlight"` : '');
+    t += `<tr ${cls} style="animation-delay:${i*0.04}s">`;
+    for (const c of cols) {
+      const val = row[c] === null ? '<span style="color:var(--text-dim);font-style:italic">NULL</span>' : escapeHtml(String(row[c] ?? ''));
+      t += `<td>${val}</td>`;
+    }
+    t += '</tr>';
+  }
+  t += '</tbody></table>';
+  return t;
+}
+
+function buildJoinViz(step) {
+  const { type, leftTable, rightTable } = step.joinInfo;
+  const isLeft = type.includes('LEFT');
+  const isRight = type.includes('RIGHT');
+  const isFull = type.includes('FULL');
+  const isInner = !isLeft && !isRight && !isFull;
+
+  let vennHtml = `<div class="join-diagram">
+    <div style="text-align:center">
+      <div style="position:relative;display:inline-flex;align-items:center">
+        <div class="join-circle left-v" style="z-index:2;background:${isLeft||isFull?'rgba(255,107,107,0.4)':'rgba(255,107,107,0.15)'}">
+          <span style="font-size:10px">${leftTable.toUpperCase()}</span>
+        </div>
+        <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;font-size:10px;font-weight:700;font-family:JetBrains Mono,monospace;color:${isInner||isFull?'rgba(255,255,255,0.9)':'rgba(255,255,255,0.4)'}">∩</div>
+        <div class="join-circle right-v" style="z-index:1;background:${isRight||isFull?'rgba(255,217,61,0.4)':'rgba(255,217,61,0.15)'}">
+          <span style="font-size:10px">${rightTable.toUpperCase()}</span>
+        </div>
+      </div>
+      <div class="join-label">${type}<br>${isInner?'Only matching rows':'Left table rows preserved'}</div>
+    </div>
+  </div>`;
+
+  let tableHtml = `<div class="inline-table-wrap" style="margin-top:10px">
+    <div style="flex:1">
+      <div class="table-label" style="color:var(--c-from)">${leftTable} (left)</div>
+      ${buildTable(step.leftData.slice(0,5))}
+    </div>
+    <div style="flex:1">
+      <div class="table-label" style="color:var(--c-join)">${rightTable} (right)</div>
+      ${buildTable(step.rightData.slice(0,5))}
+    </div>
+  </div>
+  <div style="margin-top:12px">
+    <div class="table-label" style="color:var(--accent)">JOINED RESULT (${step.data.length} rows)</div>
+    ${buildTable(step.data.slice(0,8), 'new')}
+    ${step.data.length > 8 ? `<div style="padding:6px;font-family:JetBrains Mono,monospace;font-size:11px;color:var(--text-dim)">... and ${step.data.length-8} more rows</div>` : ''}
+  </div>`;
+
+  return vennHtml + tableHtml;
+}
+
+function buildGroupViz(step) {
+  let html = '<div class="tables-grid">';
+  for (const [key, rows] of Object.entries(step.groups)) {
+    html += `<div>
+      <div class="table-label" style="color:var(--c-groupby)">${step.groupField} = "${key}" (${rows.length} rows)</div>
+      ${buildTable(rows.slice(0,4))}
+      ${rows.length > 4 ? `<div style="font-size:11px;color:var(--text-dim);padding:4px;font-family:JetBrains Mono,monospace">...+${rows.length-4} more</div>` : ''}
+    </div>`;
+  }
+  html += '</div>';
+  html += `<div style="margin-top:12px">
+    <div class="table-label" style="color:var(--accent)">AGGREGATED RESULT</div>
+    ${buildTable(step.data, 'new')}
+  </div>`;
+  return html;
+}
+
+function buildSelectViz(step) {
+  if (!step.beforeData || !step.selectCols) return `<div class="table-container">${buildTable(step.data, 'new')}</div>`;
+
+  const allCols = step.beforeData.length > 0 ? Object.keys(step.beforeData[0]) : [];
+  const selected = step.selectCols;
+
+  let html = `<div style="margin-bottom:10px">
+    <div class="table-label">BEFORE SELECT (all columns)</div>
+    <div class="table-container">
+      <table class="sql-table"><thead><tr>`;
+  for (const c of allCols) {
+    const isSelected = selected.includes(c.toLowerCase());
+    html += `<th style="${isSelected ? 'color:var(--accent);border-bottom:2px solid var(--accent)' : 'opacity:0.4'}">${c}${isSelected ? ' ✓' : ''}</th>`;
+  }
+  html += '</tr></thead><tbody>';
+  for (const row of step.beforeData.slice(0,5)) {
+    html += '<tr>';
+    for (const c of allCols) {
+      const isSelected = selected.includes(c.toLowerCase());
+      html += `<td class="${isSelected ? 'highlight-cell' : ''}" style="${!isSelected ? 'opacity:0.3' : ''}">${row[c] ?? ''}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += `</tbody></table></div></div>`;
+
+  html += `<div>
+    <div class="table-label" style="color:var(--c-select)">AFTER SELECT (${selected.length} columns kept)</div>
+    <div class="table-container">${buildTable(step.data.slice(0,5), 'new')}</div>
+  </div>`;
+
+  return html;
+}
+
+function buildOrderViz(step) {
+  const before = step.beforeData;
+  const after = step.data;
+  if (!before || before.length === 0) return buildTable(after);
+
+  const cols = Object.keys(after[0]);
+  let html = `<div class="inline-table-wrap">
+    <div style="flex:1;min-width:200px">
+      <div class="table-label">BEFORE SORT</div>
+      <div class="table-container">
+        <table class="sql-table"><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>
+        ${before.slice(0,8).map(row => `<tr>${cols.map(c=>`<td>${row[c]??''}</td>`).join('')}</tr>`).join('')}
+        </tbody></table>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;font-size:24px;color:var(--c-orderby)">→</div>
+    <div style="flex:1;min-width:200px">
+      <div class="table-label" style="color:var(--c-orderby)">AFTER SORT</div>
+      <div class="table-container">${buildTable(after.slice(0,8), 'new')}</div>
+    </div>
+  </div>`;
+  return html;
+}
+
+function buildLimitViz(step) {
+  const { n, beforeData, data } = step;
+  const cols = data.length > 0 ? Object.keys(data[0]) : [];
+
+  let html = `<div class="table-container"><table class="sql-table"><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>`;
+
+  for (let i = 0; i < beforeData.length; i++) {
+    const row = beforeData[i];
+    const kept = i < n;
+    html += `<tr class="${kept ? 'row-kept' : 'row-filtered'}">`;
+    for (const c of cols) html += `<td>${row[c] ?? ''}</td>`;
+    html += `<td style="color:${kept?'var(--green)':'var(--red)'};">${kept ? '✓ kept' : '✗ cut'}</td>`;
+    html += '</tr>';
+  }
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// =================== NAVIGATION ===================
+function nextStep() {
+  if (currentStep < steps.length - 1) {
+    currentStep++;
+    renderStep(currentStep);
+    document.getElementById('btn-prev').disabled = currentStep === 0;
+    document.getElementById('btn-next').disabled = currentStep === steps.length - 1;
+  }
+}
+
+function prevStep() {
+  if (currentStep > 0) {
+    currentStep--;
+    renderStep(currentStep);
+    document.getElementById('btn-prev').disabled = currentStep === 0;
+    document.getElementById('btn-next').disabled = currentStep === steps.length - 1;
+  }
+}
+
+function resetAnimation() {
+  stopAutoPlay();
+  currentStep = -1;
+  document.getElementById('btn-prev').disabled = true;
+  document.getElementById('btn-next').disabled = false;
+  document.getElementById('animation-stage').innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-dim);font-family:\'JetBrains Mono\',monospace;font-size:13px;">Click <span style="color:var(--accent)">NEXT →</span> to start again.</div>';
+  document.getElementById('result-panel').classList.remove('visible');
+  document.querySelectorAll('.exec-step').forEach(el => el.classList.remove('active','done'));
+  updateProgress(0);
+}
+
+function autoPlay() {
+  if (autoPlayTimer) {
+    stopAutoPlay();
+    return;
+  }
+  document.getElementById('btn-play').textContent = '⏸ PAUSE';
+  const speed = parseInt(document.getElementById('speed-select').value);
+  const tick = () => {
+    if (currentStep < steps.length - 1) {
+      nextStep();
+      autoPlayTimer = setTimeout(tick, speed);
+    } else {
+      stopAutoPlay();
+    }
+  };
+  autoPlayTimer = setTimeout(tick, 100);
+}
+
+function stopAutoPlay() {
+  if (autoPlayTimer) {
+    clearTimeout(autoPlayTimer);
+    autoPlayTimer = null;
+  }
+  document.getElementById('btn-play').textContent = '▶ AUTO PLAY';
+}
+
+// Auto-run first preset on load
+window.onload = () => {
+  setTimeout(() => {
+    runQuery();
+    nextStep();
+  }, 300);
+};
+</script>
+</body>
+</html>
