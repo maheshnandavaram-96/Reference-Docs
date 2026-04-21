@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JS Event Loop Playground</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #060a12;
+  --surface: #0b1120;
+  --surface2: #0f1829;
+  --surface3: #131f34;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.1);
+
+  --clr-stack: #ff6535;
+  --clr-heap: #4a9eff;
+  --clr-webapi: #c040ff;
+  --clr-task: #ff2060;
+  --clr-micro: #00dfa0;
+  --clr-loop: #00cfff;
+  --clr-engine: #5a7a9a;
+
+  --txt: #b8cee8;
+  --txt-dim: #3a526a;
+  --txt-bright: #ddeeff;
+  --accent: #ffc030;
+
+  --r: 10px;
+  --r-sm: 6px;
+  --mono: 'JetBrains Mono', 'Courier New', monospace;
+  --display: 'Orbitron', sans-serif;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--mono);
+  background: var(--bg);
+  color: var(--txt);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER ─────────────────────────── */
+header {
+  flex-shrink: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+header h1 {
+  font-family: var(--display);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: var(--accent);
+  text-shadow: 0 0 24px rgba(255,192,48,.45);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.presets {
+  display: flex;
+  gap: 5px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.preset-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--txt-dim);
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all .18s;
+  white-space: nowrap;
+}
+.preset-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(255,192,48,.07); }
+.preset-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(255,192,48,.12); }
+
+.header-info-btn {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--txt-dim);
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all .18s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.header-info-btn:hover { color: var(--clr-loop); border-color: var(--clr-loop); }
+
+/* ── MAIN 3-COLUMN ───────────────────── */
+.main {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 270px 1fr 250px;
+}
+
+/* ── CODE PANEL ─────────────────────── */
+.code-panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.panel-hdr {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  font-size: 9px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--txt-dim);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#code-editor {
+  flex: 1;
+  background: var(--surface);
+  border: none;
+  color: var(--txt-bright);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.7;
+  padding: 14px;
+  resize: none;
+  outline: none;
+  tab-size: 2;
+  overflow-y: auto;
+}
+
+.code-actions {
+  flex-shrink: 0;
+  padding: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.btn-run {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(255,192,48,.15), rgba(255,192,48,.08));
+  border: 1px solid rgba(255,192,48,.4);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 9px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  letter-spacing: 1.5px;
+  transition: all .2s;
+}
+.btn-run:hover {
+  background: rgba(255,192,48,.2);
+  border-color: var(--accent);
+  box-shadow: 0 0 20px rgba(255,192,48,.25);
+  transform: translateY(-1px);
+}
+
+/* ── VIZ PANEL ──────────────────────── */
+.viz-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--bg);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.viz-top {
+  flex: 3;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  min-height: 0;
+}
+
+.viz-bottom {
+  flex: 2;
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 10px;
+  min-height: 0;
+}
+
+/* ── VIZ COMPONENT: TITLES ──────────── */
+.box-title {
+  flex-shrink: 0;
+  padding: 7px 12px;
+  font-family: var(--display);
+  font-size: 8.5px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── JS ENGINE ──────────────────────── */
+.engine-box {
+  border: 1.5px solid rgba(90,122,154,.5);
+  border-radius: var(--r);
+  background: rgba(90,122,154,.04);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: border-color .3s;
+}
+.engine-box .box-title { color: var(--clr-engine); border-color: rgba(90,122,154,.15); }
+
+.engine-inner {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 8px;
+  padding: 8px;
+  min-height: 0;
+}
+
+.heap-box {
+  border: 1px solid rgba(74,158,255,.2);
+  border-radius: var(--r-sm);
+  background: rgba(74,158,255,.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.heap-box::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  background: radial-gradient(circle at 30% 70%, rgba(74,158,255,.1) 0%, transparent 65%);
+}
+.heap-label {
+  font-family: var(--display);
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: rgba(74,158,255,.6);
+  z-index:1;
+}
+
+.call-stack-box {
+  border: 1.5px solid rgba(255,101,53,.25);
+  border-radius: var(--r-sm);
+  background: rgba(255,101,53,.03);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all .3s;
+}
+.call-stack-box.hl {
+  border-color: var(--clr-stack);
+  box-shadow: 0 0 22px rgba(255,101,53,.3), inset 0 0 15px rgba(255,101,53,.05);
+  background: rgba(255,101,53,.06);
+}
+
+.stack-label {
+  font-family: var(--display);
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  color: rgba(255,101,53,.65);
+  padding: 5px 8px;
+  border-bottom: 1px solid rgba(255,101,53,.12);
+  flex-shrink: 0;
+}
+
+.stack-items {
+  flex: 1;
+  display: flex;
+  flex-direction: column-reverse;
+  padding: 4px;
+  gap: 3px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.stack-item {
+  background: rgba(255,101,53,.13);
+  border: 1px solid rgba(255,101,53,.28);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 9.5px;
+  color: #ff8a68;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: itemIn .25s ease;
+  flex-shrink: 0;
+}
+
+.stack-item:last-child {
+  background: rgba(255,101,53,.22);
+  border-color: rgba(255,101,53,.5);
+  color: #ffaa90;
+  box-shadow: 0 0 8px rgba(255,101,53,.2);
+}
+
+/* ── WEB APIS ───────────────────────── */
+.webapi-box {
+  border: 1.5px solid rgba(192,64,255,.3);
+  border-radius: var(--r);
+  background: rgba(192,64,255,.03);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all .3s;
+}
+.webapi-box .box-title { color: var(--clr-webapi); border-color: rgba(192,64,255,.15); }
+.webapi-box.hl {
+  border-color: var(--clr-webapi);
+  box-shadow: 0 0 22px rgba(192,64,255,.28), inset 0 0 15px rgba(192,64,255,.05);
+  background: rgba(192,64,255,.06);
+}
+
+.api-items {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 7px;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.api-item {
+  background: rgba(192,64,255,.1);
+  border: 1px solid rgba(192,64,255,.3);
+  border-radius: 7px;
+  padding: 7px 12px;
+  animation: itemIn .3s ease;
+}
+.api-item-name { font-size: 10px; color: #d888ff; font-weight: 600; }
+.api-item-sub { font-size: 9px; color: rgba(192,64,255,.6); margin-top: 2px; }
+
+/* ── EVENT LOOP ─────────────────────── */
+.loop-box {
+  border: 1.5px solid rgba(0,207,255,.3);
+  border-radius: var(--r);
+  background: rgba(0,207,255,.03);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all .3s;
+  overflow: hidden;
+  position: relative;
+}
+.loop-box.hl {
+  border-color: var(--clr-loop);
+  box-shadow: 0 0 30px rgba(0,207,255,.35), inset 0 0 20px rgba(0,207,255,.06);
+  background: rgba(0,207,255,.07);
+}
+.loop-title {
+  font-family: var(--display);
+  font-size: 7px;
+  letter-spacing: 1.5px;
+  color: rgba(0,207,255,.7);
+  text-align: center;
+  line-height: 1.5;
+}
+.loop-icon {
+  font-size: 30px;
+  color: rgba(0,207,255,.6);
+  line-height: 1;
+  transition: all .3s;
+  user-select: none;
+}
+.loop-box.hl .loop-icon {
+  color: var(--clr-loop);
+  text-shadow: 0 0 20px var(--clr-loop);
+  animation: loopSpin .5s ease;
+}
+@keyframes loopSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── QUEUES ─────────────────────────── */
+.queues-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.queue-box {
+  flex: 1;
+  border-radius: var(--r);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all .3s;
+  min-height: 0;
+}
+
+.task-box {
+  border: 1.5px solid rgba(255,32,96,.28);
+  background: rgba(255,32,96,.03);
+}
+.task-box .box-title { color: var(--clr-task); border-color: rgba(255,32,96,.15); }
+.task-box.hl {
+  border-color: var(--clr-task);
+  box-shadow: 0 0 22px rgba(255,32,96,.28), inset 0 0 15px rgba(255,32,96,.05);
+  background: rgba(255,32,96,.06);
+}
+
+.micro-box {
+  border: 1.5px solid rgba(0,223,160,.28);
+  background: rgba(0,223,160,.03);
+}
+.micro-box .box-title { color: var(--clr-micro); border-color: rgba(0,223,160,.15); }
+.micro-box.hl {
+  border-color: var(--clr-micro);
+  box-shadow: 0 0 22px rgba(0,223,160,.28), inset 0 0 15px rgba(0,223,160,.05);
+  background: rgba(0,223,160,.06);
+}
+
+.priority-tag {
+  font-size: 7.5px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: rgba(0,223,160,.18);
+  color: var(--clr-micro);
+  letter-spacing: .8px;
+}
+
+.queue-items {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  gap: 5px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.queue-item {
+  flex-shrink: 0;
+  padding: 5px 11px;
+  border-radius: 5px;
+  font-size: 9.5px;
+  animation: itemIn .28s ease;
+  white-space: nowrap;
+}
+
+.task-box .queue-item {
+  background: rgba(255,32,96,.12);
+  border: 1px solid rgba(255,32,96,.35);
+  color: #ff7090;
+}
+.task-box .queue-item.first {
+  background: rgba(255,32,96,.2);
+  border-color: rgba(255,32,96,.6);
+  color: #ff90a8;
+}
+
+.micro-box .queue-item {
+  background: rgba(0,223,160,.1);
+  border: 1px solid rgba(0,223,160,.3);
+  color: #00dfa0;
+}
+.micro-box .queue-item.first {
+  background: rgba(0,223,160,.2);
+  border-color: rgba(0,223,160,.55);
+  color: #40ffb8;
+}
+
+@keyframes itemIn {
+  from { opacity:0; transform:scale(.88) translateY(-4px); }
+  to   { opacity:1; transform:scale(1) translateY(0); }
+}
+
+/* ── INFO PANEL ─────────────────────── */
+.info-panel {
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.console-out {
+  flex: 1;
+  padding: 10px 14px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.console-line {
+  display: flex;
+  gap: 8px;
+  font-size: 10.5px;
+  line-height: 1.7;
+  animation: fadeSlide .2s ease;
+}
+.con-gt { color: var(--txt-dim); }
+.con-val { color: #88e060; }
+
+@keyframes fadeSlide {
+  from { opacity:0; transform:translateX(-6px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+
+.step-section {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  padding: 12px 14px;
+  min-height: 110px;
+}
+
+.step-text {
+  font-size: 10.5px;
+  line-height: 1.65;
+  color: var(--txt);
+}
+.step-text .tk { padding: 0 5px; border-radius: 3px; font-size: 10px; display: inline-block; }
+.hl-s { background:rgba(255,101,53,.2); color:#ff9070; }
+.hl-w { background:rgba(192,64,255,.2); color:#d888ff; }
+.hl-t { background:rgba(255,32,96,.2); color:#ff6080; }
+.hl-m { background:rgba(0,223,160,.18); color:#00dfa0; }
+.hl-l { background:rgba(0,207,255,.18); color:#00cfff; }
+.hl-c { background:rgba(255,192,48,.15); color:#ffc030; }
+
+.legend-section {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  padding: 8px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.leg {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  color: var(--txt-dim);
+}
+.leg-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── CONTROLS ───────────────────────── */
+.controls {
+  flex-shrink: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 52px;
+}
+
+.ctrl {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--txt);
+  font-family: var(--mono);
+  font-size: 13px;
+  width: 36px;
+  height: 34px;
+  border-radius: 7px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .18s;
+  flex-shrink: 0;
+}
+.ctrl:hover:not(:disabled) { border-color: rgba(255,255,255,.22); color: white; }
+.ctrl:disabled { opacity: .28; cursor: not-allowed; }
+
+#play-btn {
+  width: auto;
+  padding: 0 16px;
+  font-size: 10.5px;
+  letter-spacing: 1.2px;
+  gap: 6px;
+  background: rgba(0,207,255,.08);
+  border-color: rgba(0,207,255,.35);
+  color: var(--clr-loop);
+}
+#play-btn:hover { background: rgba(0,207,255,.16); border-color: var(--clr-loop); box-shadow: 0 0 14px rgba(0,207,255,.2); }
+#play-btn.playing { background: rgba(255,32,96,.08); border-color: rgba(255,32,96,.4); color: var(--clr-task); }
+
+.divider { width: 1px; height: 24px; background: var(--border2); flex-shrink: 0; }
+
+.speed-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.speed-wrap span {
+  font-size: 9px;
+  letter-spacing: 1.2px;
+  color: var(--txt-dim);
+  text-transform: uppercase;
+}
+
+#speed-input {
+  -webkit-appearance: none;
+  width: 75px;
+  height: 3px;
+  background: var(--surface2);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+#speed-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--clr-loop);
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(0,207,255,.4);
+}
+
+.step-ctr {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--txt-dim);
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+/* ── EMPTY HINTS ────────────────────── */
+.empty-hint {
+  font-size: 9.5px;
+  color: var(--txt-dim);
+  font-style: italic;
+  padding: 4px;
+}
+
+/* ── INFO MODAL ─────────────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  max-width: 580px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 24px;
+  position: relative;
+}
+
+.modal h2 {
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  margin-bottom: 20px;
+}
+
+.modal h3 {
+  font-size: 11px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal p {
+  font-size: 10.5px;
+  line-height: 1.7;
+  color: var(--txt);
+  margin-bottom: 16px;
+  padding-left: 18px;
+  border-left: 2px solid var(--border2);
+}
+
+.modal-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--txt-dim);
+  font-size: 16px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .18s;
+}
+.modal-close:hover { color: white; border-color: rgba(255,255,255,.3); }
+
+.dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+/* ── SCROLLBARS ─────────────────────── */
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <h1>⟳ JS EVENT LOOP</h1>
+  <div class="presets">
+    <button class="preset-btn active" onclick="loadPreset(0)">① setTimeout</button>
+    <button class="preset-btn" onclick="loadPreset(1)">② Promise.then</button>
+    <button class="preset-btn" onclick="loadPreset(2)">③ Micro Priority ★</button>
+    <button class="preset-btn" onclick="loadPreset(3)">④ Async/Await</button>
+    <button class="preset-btn" onclick="loadPreset(4)">⑤ Complex Mix</button>
+  </div>
+  <button class="header-info-btn" onclick="document.getElementById('infoModal').classList.add('open')">? Components</button>
+</header>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- CODE PANEL -->
+  <div class="code-panel">
+    <div class="panel-hdr"><span>CODE EDITOR</span></div>
+    <textarea id="code-editor" spellcheck="false"></textarea>
+    <div class="code-actions">
+      <button class="btn-run" onclick="runSim()">▶  RUN SIMULATION</button>
+    </div>
+  </div>
+
+  <!-- VIZ PANEL -->
+  <div class="viz-panel">
+
+    <!-- Top row: Engine + Web APIs -->
+    <div class="viz-top">
+
+      <!-- JS Engine -->
+      <div class="engine-box">
+        <div class="box-title">JavaScript Engine</div>
+        <div class="engine-inner">
+          <div class="heap-box">
+            <span class="heap-label">HEAP</span>
+          </div>
+          <div class="call-stack-box" id="stack-box">
+            <div class="stack-label">Call Stack</div>
+            <div class="stack-items" id="stack-items">
+              <span class="empty-hint">empty</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Web APIs -->
+      <div class="webapi-box" id="webapi-box">
+        <div class="box-title">Web APIs</div>
+        <div class="api-items" id="api-items">
+          <span class="empty-hint">no active APIs</span>
+        </div>
+      </div>
+
+    </div><!-- /.viz-top -->
+
+    <!-- Bottom row: Event Loop + Queues -->
+    <div class="viz-bottom">
+
+      <!-- Event Loop -->
+      <div class="loop-box" id="loop-box">
+        <div class="loop-title">Event<br>Loop</div>
+        <div class="loop-icon" id="loop-icon">↻</div>
+      </div>
+
+      <!-- Queues -->
+      <div class="queues-col">
+        <div class="queue-box task-box" id="task-box">
+          <div class="box-title">Task Queue &nbsp;<span style="font-size:8px;color:rgba(255,32,96,.45);">(Macrotask)</span></div>
+          <div class="queue-items" id="task-items">
+            <span class="empty-hint">empty</span>
+          </div>
+        </div>
+        <div class="queue-box micro-box" id="micro-box">
+          <div class="box-title">Microtask Queue&nbsp;<span class="priority-tag">RUNS FIRST</span></div>
+          <div class="queue-items" id="micro-items">
+            <span class="empty-hint">empty</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.viz-bottom -->
+
+  </div><!-- /.viz-panel -->
+
+  <!-- INFO PANEL -->
+  <div class="info-panel">
+    <div class="panel-hdr">
+      <span>CONSOLE OUTPUT</span>
+      <span id="con-count" style="color:var(--clr-micro);font-size:9px;"></span>
+    </div>
+    <div class="console-out" id="console-out">
+      <span class="empty-hint">Run simulation to see output…</span>
+    </div>
+    <div class="panel-hdr">
+      <span>WHAT'S HAPPENING</span>
+      <span id="step-num" style="color:var(--txt-dim);font-size:9px;"></span>
+    </div>
+    <div class="step-section">
+      <div class="step-text" id="step-text">Select a preset above and click <strong style="color:var(--accent)">Run Simulation</strong> to begin stepping through the JavaScript Event Loop.</div>
+    </div>
+    <div class="panel-hdr"><span>LEGEND</span></div>
+    <div class="legend-section">
+      <div class="leg"><div class="leg-dot" style="background:var(--clr-stack)"></div>Call Stack</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--clr-webapi)"></div>Web APIs</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--clr-task)"></div>Task Queue</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--clr-micro)"></div>Microtask</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--clr-loop)"></div>Event Loop</div>
+    </div>
+  </div>
+
+</div><!-- /.main -->
+
+<!-- CONTROLS -->
+<div class="controls">
+  <button class="ctrl" id="prev-btn" onclick="prevStep()" title="Previous step" disabled>◀</button>
+  <button class="ctrl" id="play-btn" onclick="togglePlay()">▶ PLAY</button>
+  <button class="ctrl" id="next-btn" onclick="nextStep()" title="Next step" disabled>▶</button>
+  <div class="divider"></div>
+  <button class="ctrl" id="reset-btn" onclick="resetSim()" title="Reset" style="width:auto;padding:0 12px;font-size:10px;letter-spacing:.5px;color:var(--txt-dim);">↺ RESET</button>
+  <div class="divider"></div>
+  <div class="speed-wrap">
+    <span>Speed</span>
+    <input type="range" id="speed-input" min="1" max="5" value="2">
+  </div>
+  <div class="step-ctr" id="step-ctr">— / —</div>
+</div>
+
+<!-- INFO MODAL -->
+<div class="modal-overlay" id="infoModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('infoModal').classList.remove('open')">✕</button>
+    <h2>JS RUNTIME COMPONENTS</h2>
+
+    <h3><span class="dot" style="background:var(--clr-heap)"></span>Heap</h3>
+    <p>The <strong>Memory Heap</strong> is where JavaScript stores objects and variables in an unstructured region of memory. When you create an object like <code>{}</code> or an array, it lives here. The garbage collector automatically reclaims memory no longer referenced.</p>
+
+    <h3><span class="dot" style="background:var(--clr-stack)"></span>Call Stack</h3>
+    <p>A <strong>LIFO (Last In, First Out)</strong> data structure that tracks the currently executing functions. When a function is called, a new frame is <em>pushed</em> onto the stack. When it returns, the frame is <em>popped</em>. JavaScript is single-threaded — only one function executes at a time via this stack. If the stack overflows (infinite recursion), you get a "Maximum call stack size exceeded" error.</p>
+
+    <h3><span class="dot" style="background:var(--clr-webapi)"></span>Web APIs</h3>
+    <p>APIs provided by the <strong>browser runtime</strong> (not the JS engine itself). These include <code>setTimeout</code>, <code>fetch</code>, <code>XMLHttpRequest</code>, <code>localStorage</code>, <code>DOM events</code>, and more. When you call <code>setTimeout</code>, the browser takes the callback and timer — freeing the Call Stack immediately. When the timer expires, the callback is moved to the Task Queue.</p>
+
+    <h3><span class="dot" style="background:var(--clr-loop)"></span>Event Loop</h3>
+    <p>The <strong>heart of async JavaScript</strong>. The Event Loop continuously monitors two things: is the Call Stack empty? And are there pending callbacks? Its algorithm: (1) Run all synchronous code until stack is empty. (2) Drain the entire Microtask Queue. (3) Pick ONE task from the Task Queue. (4) Repeat. This loop is what makes JavaScript feel "concurrent" despite being single-threaded.</p>
+
+    <h3><span class="dot" style="background:var(--clr-task)"></span>Task Queue (Macrotask Queue)</h3>
+    <p>A <strong>FIFO queue</strong> for callbacks from Web APIs — primarily <code>setTimeout</code>, <code>setInterval</code>, <code>setImmediate</code>, and I/O events. The Event Loop picks exactly ONE task per loop iteration. Even <code>setTimeout(fn, 0)</code> queues here, so it never runs before the current synchronous code finishes.</p>
+
+    <h3><span class="dot" style="background:var(--clr-micro)"></span>Microtask Queue</h3>
+    <p>A <strong>higher-priority queue</strong> for microtasks — primarily <code>Promise.then()</code>, <code>Promise.catch()</code>, <code>queueMicrotask()</code>, and the continuation after <code>await</code>. After every task (and after the initial script), the Event Loop drains the <em>entire</em> Microtask Queue before moving on. Microtasks can even schedule more microtasks — they all run before the next Task.</p>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  PRESET DATA
+// ═══════════════════════════════════════════════
+
+const PRESETS = [
+
+// ─── 0: setTimeout ───────────────────────────
+{
+  code: `console.log('Start');
+
+setTimeout(function cb() {
+  console.log('Timeout callback!');
+}, 1000);
+
+console.log('End');`,
+  steps: [
+    { cs:[], wa:[], tq:[], mq:[], cl:[], hl:null, info:"Ready to execute. Click <span class='tk hl-c'>▶ PLAY</span> or <span class='tk hl-c'>Next ▶</span> to step through." },
+    { cs:['main()'], wa:[], tq:[], mq:[], cl:[], hl:'s', info:"Script starts. A global execution context <span class='tk hl-s'>main()</span> is pushed to the <span class='tk hl-s'>Call Stack</span>." },
+    { cs:['main()','console.log(\"Start\")'], wa:[], tq:[], mq:[], cl:[], hl:'s', info:"<span class='tk hl-s'>console.log('Start')</span> is pushed onto the <span class='tk hl-s'>Call Stack</span>. Synchronous — executes immediately." },
+    { cs:['main()','console.log(\"Start\")'], wa:[], tq:[], mq:[], cl:['Start'], hl:'s', info:"✔ \"Start\" is printed to the console." },
+    { cs:['main()'], wa:[], tq:[], mq:[], cl:['Start'], hl:'s', info:"<span class='tk hl-s'>console.log</span> finishes and is <em>popped</em> off the Call Stack." },
+    { cs:['main()','setTimeout(cb, 1000)'], wa:[], tq:[], mq:[], cl:['Start'], hl:'s', info:"<span class='tk hl-s'>setTimeout(cb, 1000)</span> is pushed to the Call Stack." },
+    { cs:['main()','setTimeout(cb, 1000)'], wa:['Timer: cb [1000ms]'], tq:[], mq:[], cl:['Start'], hl:'w', info:"setTimeout hands the callback off to <span class='tk hl-w'>Web APIs</span>. A 1000ms timer starts in the background. JavaScript does NOT wait — it's non-blocking!" },
+    { cs:['main()'], wa:['Timer: cb [1000ms]'], tq:[], mq:[], cl:['Start'], hl:'s', info:"setTimeout returns immediately and is popped. The timer runs in <span class='tk hl-w'>Web APIs</span> independently of the JS engine." },
+    { cs:['main()','console.log(\"End\")'], wa:['Timer: cb [1000ms]'], tq:[], mq:[], cl:['Start'], hl:'s', info:"<span class='tk hl-s'>console.log('End')</span> pushed. Synchronous code continues normally — the timer is running in parallel." },
+    { cs:['main()','console.log(\"End\")'], wa:['Timer: cb [1000ms]'], tq:[], mq:[], cl:['Start','End'], hl:'s', info:"✔ \"End\" is printed to the console." },
+    { cs:['main()'], wa:['Timer: cb [1000ms]'], tq:[], mq:[], cl:['Start','End'], hl:'s', info:"console.log popped." },
+    { cs:[], wa:['Timer: cb [1000ms]'], tq:[], mq:[], cl:['Start','End'], hl:'s', info:"<span class='tk hl-s'>main()</span> completes — the <span class='tk hl-s'>Call Stack is now EMPTY</span>. The timer is still ticking in Web APIs…" },
+    { cs:[], wa:[], tq:['cb'], mq:[], cl:['Start','End'], hl:'t', info:"⏰ 1000ms elapsed! <span class='tk hl-w'>Web APIs</span> move <code>cb</code> to the <span class='tk hl-t'>Task Queue</span> (Macrotask Queue)." },
+    { cs:[], wa:[], tq:['cb'], mq:[], cl:['Start','End'], hl:'l', info:"The <span class='tk hl-l'>Event Loop</span> checks: Call Stack empty? ✓ Microtask Queue empty? ✓ Task in Task Queue? ✓ — Moving callback!" },
+    { cs:['cb()'], wa:[], tq:[], mq:[], cl:['Start','End'], hl:'s', info:"The <span class='tk hl-l'>Event Loop</span> picks <code>cb</code> from the <span class='tk hl-t'>Task Queue</span> and pushes it to the <span class='tk hl-s'>Call Stack</span>." },
+    { cs:['cb()','console.log(\"Timeout callback!\")'], wa:[], tq:[], mq:[], cl:['Start','End'], hl:'s', info:"Inside the callback: <span class='tk hl-s'>console.log('Timeout callback!')</span> is pushed." },
+    { cs:['cb()','console.log(\"Timeout callback!\")'], wa:[], tq:[], mq:[], cl:['Start','End','Timeout callback!'], hl:'s', info:"✔ \"Timeout callback!\" printed." },
+    { cs:['cb()'], wa:[], tq:[], mq:[], cl:['Start','End','Timeout callback!'], hl:'s', info:"console.log popped." },
+    { cs:[], wa:[], tq:[], mq:[], cl:['Start','End','Timeout callback!'], hl:null, info:"✅ <strong>All done!</strong> Output: <em>Start → End → Timeout callback!</em><br><br>Note how \"End\" printed before the timeout, even though the timeout was set before it." },
+  ]
+},
+
+// ─── 1: Promise.then ─────────────────────────
+{
+  code: `console.log('Start');
+
+Promise.resolve('Hello!')
+  .then(function(val) {
+    console.log('Promise:', val);
+  });
+
+console.log('End');`,
+  steps: [
+    { cs:[], wa:[], tq:[], mq:[], cl:[], hl:null, info:"Promise example. Promises use the <span class='tk hl-m'>Microtask Queue</span>, which has different (higher priority) rules than setTimeout." },
+    { cs:['main()'], wa:[], tq:[], mq:[], cl:[], hl:'s', info:"<span class='tk hl-s'>main()</span> pushed to Call Stack." },
+    { cs:['main()','console.log(\"Start\")'], wa:[], tq:[], mq:[], cl:[], hl:'s', info:"<span class='tk hl-s'>console.log('Start')</span> pushed." },
+    { cs:['main()'], wa:[], tq:[], mq:[], cl:['Start'], hl:'s', info:"✔ \"Start\" logged. console.log popped." },
+    { cs:['main()','Promise.resolve(\"Hello!\").then(…)'], wa:[], tq:[], mq:[], cl:['Start'], hl:'s', info:"<span class='tk hl-s'>Promise.resolve('Hello!')</span> is called — creates an already-resolved Promise. Then <code>.then(callback)</code> registers the callback." },
+    { cs:['main()','Promise.resolve(\"Hello!\").then(…)'], wa:[], tq:[], mq:['then: val → log(val)'], cl:['Start'], hl:'m', info:"Since the Promise is already resolved, the <code>.then()</code> callback is immediately queued to the <span class='tk hl-m'>Microtask Queue</span>. It doesn't run yet!" },
+    { cs:['main()'], wa:[], tq:[], mq:['then: val → log(val)'], cl:['Start'], hl:'s', info:"Promise.resolve().then() call is popped from the Stack. Callback is waiting in the Microtask Queue." },
+    { cs:['main()','console.log(\"End\")'], wa:[], tq:[], mq:['then: val → log(val)'], cl:['Start'], hl:'s', info:"<span class='tk hl-s'>console.log('End')</span> pushed. Synchronous code keeps running — microtasks don't interrupt!" },
+    { cs:['main()'], wa:[], tq:[], mq:['then: val → log(val)'], cl:['Start','End'], hl:'s', info:"✔ \"End\" logged." },
+    { cs:[], wa:[], tq:[], mq:['then: val → log(val)'], cl:['Start','End'], hl:'m', info:"<span class='tk hl-s'>main()</span> finishes — Call Stack empty! <span class='tk hl-l'>Event Loop</span> checks <span class='tk hl-m'>Microtask Queue</span> FIRST. Found one!" },
+    { cs:[], wa:[], tq:[], mq:['then: val → log(val)'], cl:['Start','End'], hl:'l', info:"<span class='tk hl-l'>Event Loop</span>: Stack empty ✓ → Drain entire Microtask Queue before any Task Queue items." },
+    { cs:['then: val → log(val)'], wa:[], tq:[], mq:[], cl:['Start','End'], hl:'s', info:"The Promise callback is moved from <span class='tk hl-m'>Microtask Queue</span> to the <span class='tk hl-s'>Call Stack</span>. Executing now!" },
+    { cs:['then: val → log(val)','console.log(\"Promise:\", val)'], wa:[], tq:[], mq:[], cl:['Start','End'], hl:'s', info:"<span class='tk hl-s'>console.log('Promise:', val)</span> pushed inside the callback." },
+    { cs:['then: val → log(val)'], wa:[], tq:[], mq:[], cl:['Start','End','Promise: Hello!'], hl:'s', info:"✔ \"Promise: Hello!\" logged." },
+    { cs:[], wa:[], tq:[], mq:[], cl:['Start','End','Promise: Hello!'], hl:null, info:"✅ <strong>Done!</strong> Output: <em>Start → End → Promise: Hello!</em><br><br>Even though the Promise resolved before 'End' was printed, the callback ran <em>after</em> all sync code." },
+  ]
+},
+
+// ─── 2: Microtask Priority ───────────────────
+{
+  code: `console.log('1: Start');
+
+setTimeout(function() {
+  console.log('4: setTimeout'); // Task
+}, 0);
+
+Promise.resolve()
+  .then(function() {
+    console.log('3: Promise');  // Microtask
+  });
+
+console.log('2: End');
+// Predicted output: 1, 2, 3, 4`,
+  steps: [
+    { cs:[], wa:[], tq:[], mq:[], cl:[], hl:null, info:"🌟 <strong>Most important example!</strong> setTimeout(0) vs Promise.then — both are async, but which runs first? Predict the output before stepping through!" },
+    { cs:['main()'], wa:[], tq:[], mq:[], cl:[], hl:'s', info:"main() pushed." },
+    { cs:['main()','console.log(\"1: Start\")'], wa:[], tq:[], mq:[], cl:[], hl:'s', info:"console.log('1: Start') pushed." },
+    { cs:['main()'], wa:[], tq:[], mq:[], cl:['1: Start'], hl:'s', info:"✔ \"1: Start\" logged." },
+    { cs:['main()','setTimeout(cb, 0)'], wa:[], tq:[], mq:[], cl:['1: Start'], hl:'s', info:"setTimeout(cb, 0) called. <strong>Even 0ms delay goes through Web APIs!</strong>" },
+    { cs:['main()'], wa:['Timer: cb [0ms]'], tq:[], mq:[], cl:['1: Start'], hl:'w', info:"cb registered with <span class='tk hl-w'>Web APIs</span>. Timer starts (0ms, fires almost instantly, but still async)." },
+    { cs:['main()','Promise.resolve().then(…)'], wa:['Timer: cb [0ms]'], tq:[], mq:[], cl:['1: Start'], hl:'s', info:"Promise.resolve().then(...) called." },
+    { cs:['main()'], wa:['Timer: cb [0ms]'], tq:[], mq:['then: () → log(3)'], cl:['1: Start'], hl:'m', info:"Promise callback queued to <span class='tk hl-m'>Microtask Queue</span>." },
+    { cs:['main()','console.log(\"2: End\")'], wa:['Timer: cb [0ms]'], tq:[], mq:['then: () → log(3)'], cl:['1: Start'], hl:'s', info:"console.log('2: End') pushed." },
+    { cs:['main()'], wa:['Timer: cb [0ms]'], tq:[], mq:['then: () → log(3)'], cl:['1: Start','2: End'], hl:'s', info:"✔ \"2: End\" logged." },
+    { cs:[], wa:[], tq:['setTimeout cb'], mq:['then: () → log(3)'], cl:['1: Start','2: End'], hl:'l', info:"main() done. Timer fires instantly — <code>cb</code> moves to <span class='tk hl-t'>Task Queue</span>. Now we have BOTH a Microtask AND a Task queued. Which runs first? 👀" },
+    { cs:[], wa:[], tq:['setTimeout cb'], mq:['then: () → log(3)'], cl:['1: Start','2: End'], hl:'l', info:"<span class='tk hl-l'>Event Loop</span> rule: <strong>ALWAYS drain the entire Microtask Queue BEFORE picking the next Task.</strong> Microtasks win!" },
+    { cs:['then: () → log(3)'], wa:[], tq:['setTimeout cb'], mq:[], cl:['1: Start','2: End'], hl:'m', info:"Microtask moved to Call Stack. setTimeout callback stays in Task Queue — waiting." },
+    { cs:['then: () → log(3)','console.log(\"3: Promise\")'], wa:[], tq:['setTimeout cb'], mq:[], cl:['1: Start','2: End'], hl:'s', info:"console.log inside Promise callback pushed." },
+    { cs:[], wa:[], tq:['setTimeout cb'], mq:[], cl:['1: Start','2: End','3: Promise'], hl:'l', info:"✔ \"3: Promise\" logged. Microtask queue empty — now Event Loop can pick from Task Queue." },
+    { cs:['setTimeout cb'], wa:[], tq:[], mq:[], cl:['1: Start','2: End','3: Promise'], hl:'s', info:"setTimeout callback moved from <span class='tk hl-t'>Task Queue</span> to <span class='tk hl-s'>Call Stack</span>." },
+    { cs:['setTimeout cb','console.log(\"4: setTimeout\")'], wa:[], tq:[], mq:[], cl:['1: Start','2: End','3: Promise'], hl:'s', info:"console.log inside setTimeout callback pushed." },
+    { cs:[], wa:[], tq:[], mq:[], cl:['1: Start','2: End','3: Promise','4: setTimeout'], hl:null, info:"✅ <strong>Done!</strong> Output: <em>1 → 2 → 3 → 4</em><br><br>🔑 <strong>Key takeaway:</strong> <span class='tk hl-m'>Microtasks</span> (Promises) ALWAYS run before <span class='tk hl-t'>Macrotasks</span> (setTimeout), even with 0ms delay!" },
+  ]
+},
+
+// ─── 3: Async/Await ──────────────────────────
+{
+  code: `async function getData() {
+  console.log('2: Inside getData');
+  const result = await Promise.resolve('data!');
+  console.log('4: After await:', result);
+}
+
+console.log('1: Script start');
+getData();
+console.log('3: Script end');`,
+  steps: [
+    { cs:[], wa:[], tq:[], mq:[], cl:[], hl:null, info:"async/await is syntactic sugar over Promises. <code>await</code> suspends a function and schedules its continuation as a <span class='tk hl-m'>Microtask</span>." },
+    { cs:['main()'], wa:[], tq:[], mq:[], cl:[], hl:'s', info:"main() pushed." },
+    { cs:['main()','console.log(\"1: Script start\")'], wa:[], tq:[], mq:[], cl:[], hl:'s', info:"console.log('1: Script start') pushed." },
+    { cs:['main()'], wa:[], tq:[], mq:[], cl:['1: Script start'], hl:'s', info:"✔ \"1: Script start\" logged." },
+    { cs:['main()','getData()'], wa:[], tq:[], mq:[], cl:['1: Script start'], hl:'s', info:"<span class='tk hl-s'>getData()</span> called and pushed. <strong>Async functions start executing synchronously</strong> up to the first <code>await</code>!" },
+    { cs:['main()','getData()','console.log(\"2: Inside getData\")'], wa:[], tq:[], mq:[], cl:['1: Script start'], hl:'s', info:"Inside getData, console.log('2: Inside getData') executes synchronously." },
+    { cs:['main()','getData()'], wa:[], tq:[], mq:[], cl:['1: Script start','2: Inside getData'], hl:'s', info:"✔ \"2: Inside getData\" logged." },
+    { cs:['main()','getData()'], wa:[], tq:[], mq:['await continuation'], cl:['1: Script start','2: Inside getData'], hl:'m', info:"<code>await Promise.resolve('data!')</code> hit! The Promise is already resolved. The <strong>rest of getData</strong> (after the await) is packaged as a <span class='tk hl-m'>Microtask</span>. getData is suspended!" },
+    { cs:['main()'], wa:[], tq:[], mq:['await continuation'], cl:['1: Script start','2: Inside getData'], hl:'s', info:"<span class='tk hl-s'>getData()</span> suspended at await — removed from Call Stack. Control returns to <code>main()</code>." },
+    { cs:['main()','console.log(\"3: Script end\")'], wa:[], tq:[], mq:['await continuation'], cl:['1: Script start','2: Inside getData'], hl:'s', info:"Execution continues after getData(). console.log('3: Script end') pushed." },
+    { cs:['main()'], wa:[], tq:[], mq:['await continuation'], cl:['1: Script start','2: Inside getData','3: Script end'], hl:'s', info:"✔ \"3: Script end\" logged." },
+    { cs:[], wa:[], tq:[], mq:['await continuation'], cl:['1: Script start','2: Inside getData','3: Script end'], hl:'m', info:"main() done — Stack empty! <span class='tk hl-l'>Event Loop</span> sees the Microtask: <em>getData() continuation</em>." },
+    { cs:['getData() resumes'], wa:[], tq:[], mq:[], cl:['1: Script start','2: Inside getData','3: Script end'], hl:'s', info:"getData() resumes from where it was suspended. The awaited value 'data!' is now in <code>result</code>." },
+    { cs:['getData() resumes','console.log(\"4: After await:\", result)'], wa:[], tq:[], mq:[], cl:['1: Script start','2: Inside getData','3: Script end'], hl:'s', info:"console.log('4: After await:', result) executes." },
+    { cs:[], wa:[], tq:[], mq:[], cl:['1: Script start','2: Inside getData','3: Script end','4: After await: data!'], hl:null, info:"✅ <strong>Done!</strong> Output: <em>1 → 2 → 3 → 4</em><br><br>🔑 <code>await</code> suspends the function and yields control back to the caller. The code after await runs as a microtask after all sync code finishes." },
+  ]
+},
+
+// ─── 4: Complex Mix ──────────────────────────
+{
+  code: `console.log('1');
+
+setTimeout(() => console.log('6: Timeout-1'), 0);
+
+Promise.resolve()
+  .then(() => {
+    console.log('3: Promise-1');
+    return Promise.resolve(); // chained!
+  })
+  .then(() => console.log('5: Promise-2'));
+
+setTimeout(() => console.log('7: Timeout-2'), 0);
+
+console.log('2');
+
+Promise.resolve()
+  .then(() => console.log('4: Promise-3'));`,
+  steps: [
+    { cs:[], wa:[], tq:[], mq:[], cl:[], hl:null, info:"Advanced: 2×setTimeout + chained Promises + another Promise. Can you predict the full order? (Answer: 1,2,3,4,5,6,7)" },
+    { cs:['main()'], wa:[], tq:[], mq:[], cl:[], hl:'s', info:"main() pushed." },
+    { cs:['main()','console.log(\"1\")'], wa:[], tq:[], mq:[], cl:[], hl:'s', info:"console.log('1') pushed." },
+    { cs:['main()'], wa:[], tq:[], mq:[], cl:['1'], hl:'s', info:"✔ \"1\" logged." },
+    { cs:['main()','setTimeout(t1, 0)'], wa:[], tq:[], mq:[], cl:['1'], hl:'s', info:"First setTimeout called." },
+    { cs:['main()'], wa:['Timer: t1 [0ms]'], tq:[], mq:[], cl:['1'], hl:'w', info:"<code>t1</code> callback registered with <span class='tk hl-w'>Web APIs</span>." },
+    { cs:['main()','Promise(p1).then(cb1).then(cb2)'], wa:['Timer: t1 [0ms]'], tq:[], mq:[], cl:['1'], hl:'s', info:"First Promise chain called — Promise.resolve().then(cb1).then(cb2)" },
+    { cs:['main()'], wa:['Timer: t1 [0ms]'], tq:[], mq:['cb1: log(3)+return'], cl:['1'], hl:'m', info:"<code>cb1</code> queued to <span class='tk hl-m'>Microtask Queue</span>. Note: cb2 is registered but won't queue until cb1 resolves." },
+    { cs:['main()','setTimeout(t2, 0)'], wa:['Timer: t1 [0ms]'], tq:[], mq:['cb1: log(3)+return'], cl:['1'], hl:'s', info:"Second setTimeout called." },
+    { cs:['main()'], wa:['Timer: t1 [0ms]','Timer: t2 [0ms]'], tq:[], mq:['cb1: log(3)+return'], cl:['1'], hl:'w', info:"<code>t2</code> also in <span class='tk hl-w'>Web APIs</span>. Two timers running." },
+    { cs:['main()','console.log(\"2\")'], wa:['Timer: t1 [0ms]','Timer: t2 [0ms]'], tq:[], mq:['cb1: log(3)+return'], cl:['1'], hl:'s', info:"console.log('2') pushed." },
+    { cs:['main()'], wa:['Timer: t1 [0ms]','Timer: t2 [0ms]'], tq:[], mq:['cb1: log(3)+return'], cl:['1','2'], hl:'s', info:"✔ \"2\" logged." },
+    { cs:['main()','Promise(p3).then(cb3)'], wa:['Timer: t1 [0ms]','Timer: t2 [0ms]'], tq:[], mq:['cb1: log(3)+return'], cl:['1','2'], hl:'s', info:"Second standalone Promise.then called." },
+    { cs:['main()'], wa:['Timer: t1 [0ms]','Timer: t2 [0ms]'], tq:[], mq:['cb1: log(3)+return','cb3: log(4)'], cl:['1','2'], hl:'m', info:"<code>cb3</code> queued. Microtask Queue now has 2 callbacks." },
+    { cs:[], wa:[], tq:['t1 callback','t2 callback'], mq:['cb1: log(3)+return','cb3: log(4)'], cl:['1','2'], hl:'l', info:"main() done. Both 0ms timers fired — <code>t1</code> and <code>t2</code> in <span class='tk hl-t'>Task Queue</span>. Microtask Queue has 2 items. <span class='tk hl-l'>Event Loop</span> drains microtasks FIRST!" },
+    { cs:['cb1'], wa:[], tq:['t1 callback','t2 callback'], mq:['cb3: log(4)'], cl:['1','2'], hl:'s', info:"cb1 moved to Call Stack." },
+    { cs:[], wa:[], tq:['t1 callback','t2 callback'], mq:['cb3: log(4)','cb2: log(5)'], cl:['1','2','3: Promise-1'], hl:'m', info:"✔ \"3: Promise-1\" logged. cb1 returned <code>Promise.resolve()</code> — this schedules <code>cb2</code> as a NEW microtask! Queue: [cb3, cb2]" },
+    { cs:['cb3: log(4)'], wa:[], tq:['t1 callback','t2 callback'], mq:['cb2: log(5)'], cl:['1','2','3: Promise-1'], hl:'s', info:"Next microtask: cb3 moved to Call Stack." },
+    { cs:[], wa:[], tq:['t1 callback','t2 callback'], mq:['cb2: log(5)'], cl:['1','2','3: Promise-1','4: Promise-3'], hl:'m', info:"✔ \"4: Promise-3\" logged. Still one microtask left (cb2)." },
+    { cs:['cb2: log(5)'], wa:[], tq:['t1 callback','t2 callback'], mq:[], cl:['1','2','3: Promise-1','4: Promise-3'], hl:'s', info:"Last microtask: cb2 moved to Call Stack." },
+    { cs:[], wa:[], tq:['t1 callback','t2 callback'], mq:[], cl:['1','2','3: Promise-1','4: Promise-3','5: Promise-2'], hl:'l', info:"✔ \"5: Promise-2\" logged. Microtask Queue is finally EMPTY. <span class='tk hl-l'>Event Loop</span> can now pick from Task Queue." },
+    { cs:['t1 callback'], wa:[], tq:['t2 callback'], mq:[], cl:['1','2','3: Promise-1','4: Promise-3','5: Promise-2'], hl:'s', info:"<span class='tk hl-t'>Task Queue</span> FIFO — t1 was queued first, runs first." },
+    { cs:[], wa:[], tq:['t2 callback'], mq:[], cl:['1','2','3: Promise-1','4: Promise-3','5: Promise-2','6: Timeout-1'], hl:'l', info:"✔ \"6: Timeout-1\" logged. Event Loop checks microtasks (empty), picks next task." },
+    { cs:['t2 callback'], wa:[], tq:[], mq:[], cl:['1','2','3: Promise-1','4: Promise-3','5: Promise-2','6: Timeout-1'], hl:'s', info:"t2 callback moved to Call Stack." },
+    { cs:[], wa:[], tq:[], mq:[], cl:['1','2','3: Promise-1','4: Promise-3','5: Promise-2','6: Timeout-1','7: Timeout-2'], hl:null, info:"✅ <strong>Done!</strong> Output: <em>1→2→3→4→5→6→7</em><br><br>🔑 Chained <code>.then()</code> can enqueue new microtasks mid-drain — they all run before any task. Macrotasks run one-at-a-time, microtasks run until the queue is empty!" },
+  ]
+}
+
+]; // END PRESETS
+
+// ═══════════════════════════════════════════════
+//  ENGINE
+// ═══════════════════════════════════════════════
+
+let activePreset = 0;
+let steps = [];
+let cur = -1;
+let playing = false;
+let playTimer = null;
+const SPEEDS = [1400, 900, 550, 300, 140];
+
+function loadPreset(idx) {
+  stopPlay();
+  document.querySelectorAll('.preset-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
+  activePreset = idx;
+  document.getElementById('code-editor').value = PRESETS[idx].code;
+  steps = PRESETS[idx].steps;
+  cur = -1;
+  applyStep(-1);
+  syncControls();
+}
+
+function runSim() {
+  stopPlay();
+  steps = PRESETS[activePreset].steps;
+  cur = 0;
+  applyStep(0);
+  syncControls();
+}
+
+function nextStep() {
+  if (cur < steps.length - 1) { cur++; applyStep(cur); syncControls(); }
+  else stopPlay();
+}
+
+function prevStep() {
+  if (cur > 0) { cur--; applyStep(cur); syncControls(); }
+}
+
+function resetSim() {
+  stopPlay();
+  cur = -1;
+  applyStep(-1);
+  syncControls();
+}
+
+function togglePlay() {
+  if (playing) stopPlay(); else startPlay();
+}
+
+function startPlay() {
+  playing = true;
+  document.getElementById('play-btn').textContent = '⏸ PAUSE';
+  document.getElementById('play-btn').classList.add('playing');
+  if (cur < 0) { cur = 0; applyStep(0); syncControls(); }
+  const spd = SPEEDS[parseInt(document.getElementById('speed-input').value) - 1];
+  playTimer = setInterval(() => {
+    if (cur >= steps.length - 1) { stopPlay(); return; }
+    cur++; applyStep(cur); syncControls();
+  }, spd);
+}
+
+function stopPlay() {
+  playing = false;
+  clearInterval(playTimer); playTimer = null;
+  const btn = document.getElementById('play-btn');
+  if (btn) { btn.textContent = '▶ PLAY'; btn.classList.remove('playing'); }
+}
+
+// ── RENDER ────────────────────────────────────
+
+function applyStep(idx) {
+  const s = idx >= 0 ? steps[idx] : { cs:[], wa:[], tq:[], mq:[], cl:[], hl:null, info:"Select a preset and click <strong style='color:var(--accent)'>▶ Run Simulation</strong> to begin." };
+
+  // Call Stack
+  renderStack(s.cs);
+  setHL('stack-box', s.hl === 's');
+
+  // Web APIs
+  renderAPIs(s.wa);
+  setHL('webapi-box', s.hl === 'w');
+
+  // Task Queue
+  renderQueue('task-items', s.tq, 'task-box');
+  setHL('task-box', s.hl === 't');
+
+  // Micro Queue
+  renderQueue('micro-items', s.mq, 'micro-box');
+  setHL('micro-box', s.hl === 'm');
+
+  // Event Loop
+  const loopBox = document.getElementById('loop-box');
+  const loopIcon = document.getElementById('loop-icon');
+  const wasHL = loopBox.classList.contains('hl');
+  loopBox.classList.toggle('hl', s.hl === 'l');
+  if (s.hl === 'l' && !wasHL) {
+    loopIcon.style.animation = 'none';
+    loopIcon.offsetHeight;
+    loopIcon.style.animation = 'loopSpin .5s ease';
+  }
+
+  // Console
+  const conEl = document.getElementById('console-out');
+  if (!s.cl || s.cl.length === 0) {
+    conEl.innerHTML = '<span class="empty-hint">Waiting for output…</span>';
+    document.getElementById('con-count').textContent = '';
+  } else {
+    conEl.innerHTML = s.cl.map(l =>
+      `<div class="console-line"><span class="con-gt">&gt;</span><span class="con-val">${esc(l)}</span></div>`
+    ).join('');
+    conEl.scrollTop = conEl.scrollHeight;
+    document.getElementById('con-count').textContent = `${s.cl.length} line${s.cl.length>1?'s':''}`;
+  }
+
+  // Step info
+  document.getElementById('step-text').innerHTML = s.info;
+  document.getElementById('step-num').textContent = idx >= 0 ? `${idx+1} / ${steps.length}` : '';
+}
+
+function renderStack(items) {
+  const el = document.getElementById('stack-items');
+  if (!items || items.length === 0) { el.innerHTML = '<span class="empty-hint">empty</span>'; return; }
+  el.innerHTML = items.map((it,i) =>
+    `<div class="stack-item">${esc(it)}</div>`
+  ).join('');
+}
+
+function renderAPIs(items) {
+  const el = document.getElementById('api-items');
+  if (!items || items.length === 0) { el.innerHTML = '<span class="empty-hint">no active APIs</span>'; return; }
+  el.innerHTML = items.map(it => {
+    const m = it.match(/^(.*?)(\[.*\])?$/);
+    const name = m ? m[1].trim() : it;
+    const sub = m && m[2] ? m[2] : '';
+    return `<div class="api-item"><div class="api-item-name">${esc(name)}</div>${sub?`<div class="api-item-sub">${esc(sub)}</div>`:''}</div>`;
+  }).join('');
+}
+
+function renderQueue(elId, items, boxId) {
+  const el = document.getElementById(elId);
+  if (!items || items.length === 0) { el.innerHTML = '<span class="empty-hint">empty</span>'; return; }
+  el.innerHTML = items.map((it,i) =>
+    `<div class="queue-item${i===0?' first':''}">${i===0?'→ ':''}${esc(it)}</div>`
+  ).join('');
+}
+
+function setHL(id, on) {
+  document.getElementById(id).classList.toggle('hl', on);
+}
+
+function syncControls() {
+  document.getElementById('prev-btn').disabled = cur <= 0;
+  document.getElementById('next-btn').disabled = cur >= steps.length - 1;
+  document.getElementById('step-ctr').textContent =
+    cur >= 0 ? `Step ${cur+1} / ${steps.length}` : `0 / ${steps.length}`;
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── INIT ──────────────────────────────────────
+loadPreset(0);
+</script>
+</body>
+</html>
