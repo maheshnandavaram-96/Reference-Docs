@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JavaScript Promises — The Complete Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=JetBrains+Mono:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3a;
+    --accent: #f0c040;
+    --accent2: #60d4a0;
+    --accent3: #7090f0;
+    --accent4: #f07060;
+    --text: #e8e8f0;
+    --muted: #8888aa;
+    --code-bg: #0d0d18;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.75;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* ── SIDEBAR NAV ── */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0;
+    width: 260px; height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    z-index: 100;
+    padding: 32px 0;
+  }
+
+  .sidebar-logo {
+    padding: 0 24px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+
+  .sidebar-logo span {
+    font-family: 'Playfair Display', serif;
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .sidebar-logo h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: var(--text);
+    margin-top: 4px;
+    line-height: 1.3;
+  }
+
+  .nav-section {
+    padding: 8px 24px 4px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  .sidebar a {
+    display: block;
+    padding: 7px 24px;
+    font-size: 13.5px;
+    color: var(--muted);
+    text-decoration: none;
+    transition: all 0.2s;
+    border-left: 2px solid transparent;
+  }
+
+  .sidebar a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: rgba(240,192,64,0.04);
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    margin-left: 260px;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 100px 80px 80px;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .hero::after {
+    content: 'PROMISE';
+    position: absolute;
+    right: -40px; top: 20px;
+    font-family: 'Playfair Display', serif;
+    font-size: 200px;
+    font-weight: 900;
+    color: rgba(240,192,64,0.04);
+    pointer-events: none;
+    line-height: 1;
+  }
+
+  .hero-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(48px, 6vw, 80px);
+    font-weight: 900;
+    line-height: 1.05;
+    color: var(--text);
+    margin-bottom: 24px;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero p {
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 600px;
+    line-height: 1.8;
+  }
+
+  .hero-badges {
+    display: flex;
+    gap: 12px;
+    margin-top: 36px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    padding: 6px 16px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .badge.y { border-color: var(--accent); color: var(--accent); }
+  .badge.g { border-color: var(--accent2); color: var(--accent2); }
+  .badge.b { border-color: var(--accent3); color: var(--accent3); }
+
+  /* ── SECTIONS ── */
+  .section {
+    padding: 72px 80px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    margin-bottom: 12px;
+  }
+
+  .section h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 40px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+    line-height: 1.15;
+  }
+
+  .section-sub {
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 44px;
+    max-width: 600px;
+  }
+
+  .section h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: var(--text);
+    margin: 40px 0 16px;
+  }
+
+  .section h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent2);
+    letter-spacing: 1px;
+    margin: 28px 0 10px;
+    text-transform: uppercase;
+    font-size: 12px;
+  }
+
+  .section p {
+    color: #c0c0d8;
+    margin-bottom: 18px;
+    max-width: 760px;
+    font-size: 15.5px;
+  }
+
+  .section ul, .section ol {
+    margin: 0 0 20px 20px;
+    max-width: 740px;
+  }
+
+  .section li {
+    color: #c0c0d8;
+    font-size: 15.5px;
+    margin-bottom: 8px;
+  }
+
+  /* ── CODE BLOCKS ── */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 28px 32px;
+    overflow-x: auto;
+    margin: 24px 0;
+    position: relative;
+  }
+
+  pre .label {
+    position: absolute;
+    top: 10px; right: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    line-height: 1.9;
+    color: #d0d0e8;
+  }
+
+  /* Inline code */
+  p code, li code {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 7px;
+    font-size: 13px;
+    color: var(--accent);
+  }
+
+  /* Syntax highlighting */
+  .kw { color: #c07aff; }   /* keyword */
+  .fn { color: #60d4a0; }   /* function */
+  .str { color: #f0a060; }  /* string */
+  .cm { color: #505068; }   /* comment */
+  .nm { color: #7090f0; }   /* number/name */
+  .op { color: #f07060; }   /* operator */
+  .cl { color: #f0c040; }   /* class/constructor */
+
+  /* ── CALLOUT BOXES ── */
+  .callout {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 24px;
+    margin: 24px 0;
+    font-size: 14.5px;
+    max-width: 760px;
+  }
+
+  .callout.info {
+    background: rgba(96, 212, 160, 0.05);
+    border-left: 3px solid var(--accent2);
+  }
+
+  .callout.warn {
+    background: rgba(240, 192, 64, 0.05);
+    border-left: 3px solid var(--accent);
+  }
+
+  .callout.danger {
+    background: rgba(240, 112, 96, 0.05);
+    border-left: 3px solid var(--accent4);
+  }
+
+  .callout strong {
+    display: block;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    color: var(--accent2);
+  }
+
+  .callout.warn strong { color: var(--accent); }
+  .callout.danger strong { color: var(--accent4); }
+
+  .callout p { margin: 0; max-width: 100%; font-size: 14.5px; color: #b0b0cc; }
+
+  /* ── STATES DIAGRAM ── */
+  .states-visual {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 36px 0;
+    flex-wrap: wrap;
+  }
+
+  .state-box {
+    padding: 16px 24px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    text-align: center;
+    min-width: 130px;
+  }
+
+  .state-box .state-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .state-box .state-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  .state-box.pending { border-color: #505068; }
+  .state-box.pending .state-val { color: #8888aa; }
+  .state-box.fulfilled { border-color: var(--accent2); background: rgba(96,212,160,0.06); }
+  .state-box.fulfilled .state-val { color: var(--accent2); }
+  .state-box.rejected { border-color: var(--accent4); background: rgba(240,112,96,0.06); }
+  .state-box.rejected .state-val { color: var(--accent4); }
+
+  .arrow {
+    font-size: 28px;
+    color: var(--muted);
+  }
+
+  .arrow-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .arrow-group span { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
+  /* ── METHOD CARDS ── */
+  .method-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin: 28px 0;
+  }
+
+  .method-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+    transition: border-color 0.2s;
+  }
+
+  .method-card:hover { border-color: var(--accent3); }
+
+  .method-card .method-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    color: var(--accent3);
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  .method-card p {
+    font-size: 14px;
+    color: var(--muted);
+    margin: 0;
+    max-width: 100%;
+  }
+
+  /* ── COMPARISON TABLE ── */
+  table {
+    width: 100%;
+    max-width: 760px;
+    border-collapse: collapse;
+    margin: 28px 0;
+    font-size: 14px;
+  }
+
+  th {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    text-align: left;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  td {
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    color: #b0b0cc;
+    vertical-align: top;
+  }
+
+  tr:hover td { background: var(--surface2); }
+
+  /* ── FOOTER ── */
+  .footer {
+    padding: 48px 80px;
+    color: var(--muted);
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .hero, .section { padding: 48px 24px; }
+    .hero::after { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <span>JS Deep Dive</span>
+    <h2>Promises<br>Complete Guide</h2>
+  </div>
+  <div class="nav-section">Foundations</div>
+  <a href="#why">Why Promises?</a>
+  <a href="#what">What is a Promise?</a>
+  <a href="#states">Promise States</a>
+  <a href="#anatomy">Anatomy</a>
+  <div class="nav-section">Core API</div>
+  <a href="#then">.then()</a>
+  <a href="#catch">.catch()</a>
+  <a href="#finally">.finally()</a>
+  <a href="#chaining">Chaining</a>
+  <div class="nav-section">Static Methods</div>
+  <a href="#resolve-reject">resolve / reject</a>
+  <a href="#all">Promise.all()</a>
+  <a href="#allsettled">Promise.allSettled()</a>
+  <a href="#any">Promise.any()</a>
+  <a href="#race">Promise.race()</a>
+  <div class="nav-section">Advanced</div>
+  <a href="#async-await">async / await</a>
+  <a href="#error-handling">Error Handling</a>
+  <a href="#patterns">Patterns</a>
+  <a href="#gotchas">Gotchas</a>
+  <a href="#microtask">Microtask Queue</a>
+  <a href="#comparison">Comparison Table</a>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- HERO -->
+  <header class="hero" id="top">
+    <div class="hero-tag">// JavaScript · ES6+</div>
+    <h1>Mastering<br><em>Promises</em></h1>
+    <p>Everything you need to know about asynchronous JavaScript — from callback hell to elegant async flows. A complete, no-fluff reference.</p>
+    <div class="hero-badges">
+      <span class="badge y">ES2015+</span>
+      <span class="badge g">Async / Await</span>
+      <span class="badge b">Microtask Queue</span>
+    </div>
+  </header>
+
+  <!-- 1. WHY PROMISES -->
+  <section class="section" id="why">
+    <div class="section-number">// 01</div>
+    <h2>Why Promises?</h2>
+    <p class="section-sub">The problem they solve — callback hell</p>
+
+    <p>JavaScript is single-threaded and non-blocking. Long-running operations (network requests, file I/O, timers) are handled asynchronously. Traditionally, this meant <strong>callbacks</strong> — functions passed as arguments to be called later.</p>
+
+    <h3>The Callback Problem</h3>
+    <p>Callbacks work fine for simple cases. But real applications have sequential async operations — and callbacks nest deeply:</p>
+
+    <pre><code><span class="cm">// Callback Hell — the "Pyramid of Doom"</span>
+<span class="fn">getUser</span>(userId, <span class="kw">function</span>(err, user) {
+  <span class="kw">if</span> (err) <span class="kw">return</span> <span class="fn">handleError</span>(err);
+
+  <span class="fn">getOrders</span>(user.id, <span class="kw">function</span>(err, orders) {
+    <span class="kw">if</span> (err) <span class="kw">return</span> <span class="fn">handleError</span>(err);
+
+    <span class="fn">getProduct</span>(orders[<span class="nm">0</span>].productId, <span class="kw">function</span>(err, product) {
+      <span class="kw">if</span> (err) <span class="kw">return</span> <span class="fn">handleError</span>(err);
+
+      <span class="fn">getReviews</span>(product.id, <span class="kw">function</span>(err, reviews) {
+        <span class="kw">if</span> (err) <span class="kw">return</span> <span class="fn">handleError</span>(err);
+        <span class="cm">// Finally use the data — 4 levels deep!</span>
+        console.<span class="fn">log</span>(reviews);
+      });
+    });
+  });
+});</code></pre>
+
+    <div class="callout danger">
+      <strong>Problems with Callbacks</strong>
+      <p>Inversion of control (you hand off your code to a third party), hard error propagation, impossible to parallelize cleanly, untestable, and deeply nested — visually and logically confusing.</p>
+    </div>
+
+    <p>Promises solve all of this. They represent the <em>eventual result</em> of an async operation — an object you can attach handlers to, chain, compose, and reason about like any other value.</p>
+  </section>
+
+  <!-- 2. WHAT IS A PROMISE -->
+  <section class="section" id="what">
+    <div class="section-number">// 02</div>
+    <h2>What is a Promise?</h2>
+    <p class="section-sub">A proxy for a future value</p>
+
+    <p>A <strong>Promise</strong> is an object representing the eventual completion or failure of an asynchronous operation. Think of it like a restaurant buzzer — you get it immediately, and it will eventually notify you when your table (or value) is ready.</p>
+
+    <p>Formally: a Promise is a <strong>thenable</strong> object with a <code>.then()</code> method that follows the <a href="https://promisesaplus.com" style="color: var(--accent3)">Promises/A+ spec</a>.</p>
+
+    <h3>Creating a Promise</h3>
+    <pre><code><span class="kw">const</span> myPromise = <span class="kw">new</span> <span class="cl">Promise</span>(<span class="kw">function</span>(resolve, reject) {
+  <span class="cm">// executor function — runs synchronously, immediately</span>
+
+  <span class="kw">const</span> success = <span class="kw">true</span>;
+
+  <span class="kw">if</span> (success) {
+    <span class="fn">resolve</span>(<span class="str">'It worked!'</span>);   <span class="cm">// fulfills the promise</span>
+  } <span class="kw">else</span> {
+    <span class="fn">reject</span>(<span class="kw">new</span> <span class="cl">Error</span>(<span class="str">'Something failed'</span>));  <span class="cm">// rejects the promise</span>
+  }
+});
+<div class="label">JS</div></code></pre>
+
+    <div class="callout info">
+      <strong>Key Facts</strong>
+      <p>The executor function runs <em>synchronously</em> when the Promise is created. Only <code>resolve</code> and <code>reject</code> are asynchronous — their callbacks are scheduled as microtasks. Calling <code>resolve</code> or <code>reject</code> more than once has no effect — only the first call counts.</p>
+    </div>
+
+    <h3>Arrow Function Syntax (Modern)</h3>
+    <pre><code><span class="kw">const</span> fetchData = <span class="kw">new</span> <span class="cl">Promise</span>((resolve, reject) => {
+  <span class="fn">setTimeout</span>(() => {
+    <span class="fn">resolve</span>({ id: <span class="nm">1</span>, name: <span class="str">'Alice'</span> });
+  }, <span class="nm">1000</span>);
+});</code></pre>
+  </section>
+
+  <!-- 3. STATES -->
+  <section class="section" id="states">
+    <div class="section-number">// 03</div>
+    <h2>Promise States</h2>
+    <p class="section-sub">The three possible conditions of any Promise</p>
+
+    <p>Every Promise is in exactly one of three states at any point in time:</p>
+
+    <div class="states-visual">
+      <div class="state-box pending">
+        <div class="state-label">Initial</div>
+        <div class="state-val">Pending</div>
+      </div>
+      <div class="arrow-group">
+        <span>→</span>
+        <span>resolve()</span>
+      </div>
+      <div class="state-box fulfilled">
+        <div class="state-label">Success</div>
+        <div class="state-val">Fulfilled</div>
+      </div>
+      <div style="font-size:28px;color:var(--muted)">|</div>
+      <div class="state-box pending">
+        <div class="state-label">Initial</div>
+        <div class="state-val">Pending</div>
+      </div>
+      <div class="arrow-group">
+        <span>→</span>
+        <span>reject()</span>
+      </div>
+      <div class="state-box rejected">
+        <div class="state-label">Failure</div>
+        <div class="state-val">Rejected</div>
+      </div>
+    </div>
+
+    <table>
+      <tr>
+        <th>State</th>
+        <th>Description</th>
+        <th>Settled?</th>
+      </tr>
+      <tr>
+        <td><code>pending</code></td>
+        <td>The initial state. The operation hasn't completed yet.</td>
+        <td>No</td>
+      </tr>
+      <tr>
+        <td><code>fulfilled</code></td>
+        <td>The operation completed successfully. Has a result value.</td>
+        <td>Yes</td>
+      </tr>
+      <tr>
+        <td><code>rejected</code></td>
+        <td>The operation failed. Has a reason (usually an Error).</td>
+        <td>Yes</td>
+      </tr>
+    </table>
+
+    <div class="callout warn">
+      <strong>Immutability</strong>
+      <p>Once a Promise transitions from <code>pending</code> to either <code>fulfilled</code> or <code>rejected</code>, it is <strong>settled</strong> and its state can never change again. This immutability is fundamental — it makes Promises safe to pass around and attach multiple handlers to.</p>
+    </div>
+  </section>
+
+  <!-- 4. ANATOMY -->
+  <section class="section" id="anatomy">
+    <div class="section-number">// 04</div>
+    <h2>Anatomy of a Promise</h2>
+    <p class="section-sub">The executor, resolve, and reject — in detail</p>
+
+    <pre><code><span class="kw">const</span> promise = <span class="kw">new</span> <span class="cl">Promise</span>((resolve, reject) => {
+  <span class="cm">// ┌──────────────────────────────────────────┐</span>
+  <span class="cm">// │  EXECUTOR FUNCTION                       │</span>
+  <span class="cm">// │  Runs SYNCHRONOUSLY when Promise created │</span>
+  <span class="cm">// └──────────────────────────────────────────┘</span>
+
+  <span class="cm">// resolve(value) → fulfills the Promise</span>
+  <span class="cm">// reject(reason) → rejects the Promise</span>
+
+  <span class="cm">// Only the FIRST call to resolve/reject matters</span>
+  <span class="fn">resolve</span>(<span class="nm">42</span>);
+  <span class="fn">resolve</span>(<span class="nm">99</span>);  <span class="cm">// ← ignored, already settled</span>
+  <span class="fn">reject</span>(<span class="str">'error'</span>);  <span class="cm">// ← also ignored</span>
+});
+
+<span class="cm">// Throwing inside the executor rejects the Promise</span>
+<span class="kw">const</span> badPromise = <span class="kw">new</span> <span class="cl">Promise</span>((resolve, reject) => {
+  <span class="kw">throw</span> <span class="kw">new</span> <span class="cl">Error</span>(<span class="str">'Oops!'</span>);  <span class="cm">// ← auto-rejected</span>
+});</code></pre>
+
+    <h4>resolve() nuances</h4>
+    <p>When you call <code>resolve(value)</code>, if <code>value</code> is itself a Promise (or thenable), the outer promise <em>follows</em> the inner one. It doesn't wrap it — it adopts its state.</p>
+
+    <pre><code><span class="kw">const</span> inner = <span class="cl">Promise</span>.<span class="fn">resolve</span>(<span class="nm">42</span>);
+<span class="kw">const</span> outer = <span class="kw">new</span> <span class="cl">Promise</span>(resolve => <span class="fn">resolve</span>(inner));
+
+<span class="cm">// outer doesn't become Promise&lt;Promise&lt;42&gt;&gt;</span>
+<span class="cm">// outer becomes Promise&lt;42&gt; — it unwraps!</span>
+outer.<span class="fn">then</span>(v => console.<span class="fn">log</span>(v)); <span class="cm">// → 42</span></code></pre>
+  </section>
+
+  <!-- 5. THEN -->
+  <section class="section" id="then">
+    <div class="section-number">// 05</div>
+    <h2>.then()</h2>
+    <p class="section-sub">Attaching fulfillment and rejection handlers</p>
+
+    <p><code>.then(onFulfilled, onRejected)</code> is the core method of every Promise. It takes up to two callback functions and always returns a <strong>new Promise</strong>.</p>
+
+    <pre><code>promise.<span class="fn">then</span>(
+  (value) => {
+    <span class="cm">// called if promise FULFILLS</span>
+    <span class="cm">// value = the resolved value</span>
+    console.<span class="fn">log</span>(<span class="str">'Success:'</span>, value);
+    <span class="kw">return</span> <span class="str">'next value'</span>;  <span class="cm">// passed to next .then()</span>
+  },
+  (reason) => {
+    <span class="cm">// called if promise REJECTS</span>
+    <span class="cm">// reason = the rejection reason</span>
+    console.<span class="fn">log</span>(<span class="str">'Error:'</span>, reason);
+  }
+);</code></pre>
+
+    <h4>What .then() returns</h4>
+    <p>The new Promise returned by <code>.then()</code> resolves based on what the callback does:</p>
+
+    <pre><code><span class="kw">const</span> p = <span class="cl">Promise</span>.<span class="fn">resolve</span>(<span class="nm">10</span>);
+
+p.<span class="fn">then</span>(v => v * <span class="nm">2</span>)           <span class="cm">// returns Promise&lt;20&gt;</span>
+ .<span class="fn">then</span>(v => v + <span class="nm">5</span>)           <span class="cm">// returns Promise&lt;25&gt;</span>
+ .<span class="fn">then</span>(v => console.<span class="fn">log</span>(v)); <span class="cm">// logs 25</span>
+
+<span class="cm">// Throwing in .then() rejects the returned Promise</span>
+p.<span class="fn">then</span>(v => {
+  <span class="kw">throw</span> <span class="kw">new</span> <span class="cl">Error</span>(<span class="str">'Nope!'</span>);
+}).<span class="fn">catch</span>(err => console.<span class="fn">log</span>(err.<span class="nm">message</span>)); <span class="cm">// → 'Nope!'</span>
+
+<span class="cm">// Returning a Promise from .then() — it's flattened!</span>
+p.<span class="fn">then</span>(v => <span class="cl">Promise</span>.<span class="fn">resolve</span>(v * <span class="nm">3</span>))  <span class="cm">// NOT Promise&lt;Promise&lt;30&gt;&gt;</span>
+ .<span class="fn">then</span>(v => console.<span class="fn">log</span>(v));          <span class="cm">// → 30 ✓</span></code></pre>
+
+    <div class="callout info">
+      <strong>Handlers are always async</strong>
+      <p>Even if a Promise is already fulfilled, <code>.then()</code> callbacks never run synchronously. They are always scheduled as microtasks, ensuring consistent behaviour.</p>
+    </div>
+  </section>
+
+  <!-- 6. CATCH -->
+  <section class="section" id="catch">
+    <div class="section-number">// 06</div>
+    <h2>.catch()</h2>
+    <p class="section-sub">Handling rejections elegantly</p>
+
+    <p><code>.catch(onRejected)</code> is syntactic sugar for <code>.then(undefined, onRejected)</code>. It's the preferred way to handle errors in Promise chains.</p>
+
+    <pre><code><span class="cl">Promise</span>.<span class="fn">reject</span>(<span class="kw">new</span> <span class="cl">Error</span>(<span class="str">'Something broke'</span>))
+  .<span class="fn">catch</span>(err => {
+    console.<span class="fn">log</span>(err.<span class="nm">message</span>); <span class="cm">// 'Something broke'</span>
+    <span class="cm">// If you return here, the chain CONTINUES as fulfilled</span>
+    <span class="kw">return</span> <span class="str">'recovered'</span>;
+  })
+  .<span class="fn">then</span>(v => console.<span class="fn">log</span>(v)); <span class="cm">// → 'recovered'</span></code></pre>
+
+    <h4>Catch catches everything upstream</h4>
+    <pre><code><span class="fn">fetch</span>(<span class="str">'/api/data'</span>)
+  .<span class="fn">then</span>(res => res.<span class="fn">json</span>())
+  .<span class="fn">then</span>(data => <span class="fn">processData</span>(data))
+  .<span class="fn">then</span>(result => <span class="fn">displayResult</span>(result))
+  .<span class="fn">catch</span>(err => {
+    <span class="cm">// Catches rejections from ANY of the above .then() steps</span>
+    <span class="cm">// Including thrown errors inside handlers</span>
+    console.<span class="fn">error</span>(<span class="str">'Pipeline failed:'</span>, err);
+  });</code></pre>
+
+    <div class="callout warn">
+      <strong>Always add a .catch()</strong>
+      <p>Unhandled Promise rejections crash Node.js (since v15) and show warnings in browsers. Always terminate Promise chains with a <code>.catch()</code>, or use <code>async/await</code> with try/catch.</p>
+    </div>
+  </section>
+
+  <!-- 7. FINALLY -->
+  <section class="section" id="finally">
+    <div class="section-number">// 07</div>
+    <h2>.finally()</h2>
+    <p class="section-sub">Cleanup regardless of outcome</p>
+
+    <p><code>.finally(onFinally)</code> (ES2018) runs its callback when the Promise settles — whether fulfilled or rejected. It does <em>not</em> receive the value or reason.</p>
+
+    <pre><code><span class="kw">let</span> loading = <span class="kw">true</span>;
+
+<span class="fn">fetchData</span>()
+  .<span class="fn">then</span>(data => <span class="fn">render</span>(data))
+  .<span class="fn">catch</span>(err => <span class="fn">showError</span>(err))
+  .<span class="fn">finally</span>(() => {
+    loading = <span class="kw">false</span>;   <span class="cm">// Always runs — perfect for cleanup</span>
+    <span class="fn">hideSpinner</span>();
+  });</code></pre>
+
+    <h4>Key behaviours of .finally()</h4>
+    <ul>
+      <li>Passes through the value/reason transparently (doesn't change them)</li>
+      <li>If the callback throws or returns a rejected Promise, that rejection propagates</li>
+      <li>Returns a new Promise (like all Promise methods)</li>
+    </ul>
+
+    <pre><code><span class="cl">Promise</span>.<span class="fn">resolve</span>(<span class="nm">42</span>)
+  .<span class="fn">finally</span>(() => console.<span class="fn">log</span>(<span class="str">'cleanup'</span>))
+  .<span class="fn">then</span>(v => console.<span class="fn">log</span>(v));
+<span class="cm">// logs: 'cleanup', then 42 — value passed through</span></code></pre>
+  </section>
+
+  <!-- 8. CHAINING -->
+  <section class="section" id="chaining">
+    <div class="section-number">// 08</div>
+    <h2>Promise Chaining</h2>
+    <p class="section-sub">Composing sequential async operations</p>
+
+    <p>Because <code>.then()</code> always returns a new Promise, you can chain calls to express sequential async operations in a flat, readable way — the antidote to callback hell.</p>
+
+    <pre><code><span class="fn">fetch</span>(<span class="str">'https://api.example.com/users/1'</span>)
+  .<span class="fn">then</span>(response => {
+    <span class="kw">if</span> (!response.ok) <span class="kw">throw</span> <span class="kw">new</span> <span class="cl">Error</span>(<span class="str">`HTTP error: ${response.status}`</span>);
+    <span class="kw">return</span> response.<span class="fn">json</span>();             <span class="cm">// returns a Promise!</span>
+  })
+  .<span class="fn">then</span>(user => {
+    console.<span class="fn">log</span>(<span class="str">'Got user:'</span>, user.name);
+    <span class="kw">return</span> <span class="fn">fetch</span>(<span class="str">`/api/orders/${user.id}`</span>);  <span class="cm">// another Promise</span>
+  })
+  .<span class="fn">then</span>(response => response.<span class="fn">json</span>())
+  .<span class="fn">then</span>(orders => {
+    console.<span class="fn">log</span>(<span class="str">'Orders:'</span>, orders);
+    <span class="kw">return</span> orders;
+  })
+  .<span class="fn">catch</span>(err => console.<span class="fn">error</span>(<span class="str">'Failed:'</span>, err));</code></pre>
+
+    <div class="callout danger">
+      <strong>Common mistake: not returning</strong>
+      <p>If you forget to <code>return</code> a Promise inside a <code>.then()</code> handler, the chain doesn't wait for it. The next <code>.then()</code> runs immediately with <code>undefined</code>. Always return Promises from handlers!</p>
+    </div>
+
+    <pre><code><span class="cm">// ❌ BUG — missing return</span>
+fetchUser()
+  .<span class="fn">then</span>(user => {
+    <span class="fn">fetchOrders</span>(user.id);  <span class="cm">// not returned!</span>
+  })
+  .<span class="fn">then</span>(orders => console.<span class="fn">log</span>(orders)); <span class="cm">// → undefined</span>
+
+<span class="cm">// ✅ CORRECT</span>
+fetchUser()
+  .<span class="fn">then</span>(user => <span class="kw">return</span> <span class="fn">fetchOrders</span>(user.id))
+  .<span class="fn">then</span>(orders => console.<span class="fn">log</span>(orders)); <span class="cm">// ← works!</span></code></pre>
+  </section>
+
+  <!-- 9. STATIC METHODS -->
+  <section class="section" id="resolve-reject">
+    <div class="section-number">// 09</div>
+    <h2>Promise.resolve() & Promise.reject()</h2>
+    <p class="section-sub">Creating instantly settled Promises</p>
+
+    <pre><code><span class="cm">// Promise.resolve(value) — creates an already-fulfilled Promise</span>
+<span class="kw">const</span> p1 = <span class="cl">Promise</span>.<span class="fn">resolve</span>(<span class="nm">42</span>);
+p1.<span class="fn">then</span>(v => console.<span class="fn">log</span>(v)); <span class="cm">// → 42</span>
+
+<span class="cm">// Passing a thenable — it's unwrapped</span>
+<span class="kw">const</span> p2 = <span class="cl">Promise</span>.<span class="fn">resolve</span>(<span class="cl">Promise</span>.<span class="fn">resolve</span>(<span class="nm">99</span>));
+p2.<span class="fn">then</span>(v => console.<span class="fn">log</span>(v)); <span class="cm">// → 99 (not Promise&lt;99&gt;)</span>
+
+<span class="cm">// Promise.reject(reason) — creates an already-rejected Promise</span>
+<span class="kw">const</span> p3 = <span class="cl">Promise</span>.<span class="fn">reject</span>(<span class="kw">new</span> <span class="cl">Error</span>(<span class="str">'Nope'</span>));
+p3.<span class="fn">catch</span>(err => console.<span class="fn">log</span>(err.<span class="nm">message</span>)); <span class="cm">// → 'Nope'</span>
+
+<span class="cm">// Common use: normalizing sync values in async functions</span>
+<span class="kw">function</span> <span class="fn">maybeAsync</span>(value) {
+  <span class="kw">if</span> (value > <span class="nm">0</span>) <span class="kw">return</span> <span class="cl">Promise</span>.<span class="fn">resolve</span>(value);
+  <span class="kw">return</span> <span class="cl">Promise</span>.<span class="fn">reject</span>(<span class="kw">new</span> <span class="cl">Error</span>(<span class="str">'Value must be positive'</span>));
+}</code></pre>
+  </section>
+
+  <!-- 10. PROMISE.ALL -->
+  <section class="section" id="all">
+    <div class="section-number">// 10</div>
+    <h2>Promise.all()</h2>
+    <p class="section-sub">Wait for all — fail fast on any rejection</p>
+
+    <p><code>Promise.all(iterable)</code> takes an iterable of Promises and returns a new Promise that:</p>
+    <ul>
+      <li><strong>Fulfills</strong> when ALL promises fulfill — with an array of their values (in order)</li>
+      <li><strong>Rejects immediately</strong> when ANY promise rejects — with that reason</li>
+    </ul>
+
+    <pre><code><span class="kw">const</span> p1 = <span class="fn">fetch</span>(<span class="str">'/api/users'</span>).<span class="fn">then</span>(r => r.<span class="fn">json</span>());
+<span class="kw">const</span> p2 = <span class="fn">fetch</span>(<span class="str">'/api/products'</span>).<span class="fn">then</span>(r => r.<span class="fn">json</span>());
+<span class="kw">const</span> p3 = <span class="fn">fetch</span>(<span class="str">'/api/orders'</span>).<span class="fn">then</span>(r => r.<span class="fn">json</span>());
+
+<span class="cl">Promise</span>.<span class="fn">all</span>([p1, p2, p3])
+  .<span class="fn">then</span>(([users, products, orders]) => {
+    <span class="cm">// All 3 completed! Results in same order as input</span>
+    console.<span class="fn">log</span>(users, products, orders);
+  })
+  .<span class="fn">catch</span>(err => {
+    <span class="cm">// If ANY one fails, we're here immediately</span>
+    console.<span class="fn">error</span>(<span class="str">'One request failed:'</span>, err);
+  });</code></pre>
+
+    <div class="callout warn">
+      <strong>All-or-nothing semantics</strong>
+      <p><code>Promise.all()</code> is "fail-fast" — if one rejects, you lose all results. The other Promises still run to completion, but their values are discarded. If you need all results regardless, use <code>Promise.allSettled()</code>.</p>
+    </div>
+
+    <h4>Non-Promise values are allowed</h4>
+    <pre><code><span class="cl">Promise</span>.<span class="fn">all</span>([<span class="nm">1</span>, <span class="cl">Promise</span>.<span class="fn">resolve</span>(<span class="nm">2</span>), <span class="str">'three'</span>])
+  .<span class="fn">then</span>(values => console.<span class="fn">log</span>(values)); <span class="cm">// → [1, 2, 'three']</span></code></pre>
+  </section>
+
+  <!-- 11. ALLSETTLED -->
+  <section class="section" id="allsettled">
+    <div class="section-number">// 11</div>
+    <h2>Promise.allSettled()</h2>
+    <p class="section-sub">Wait for all, regardless of failure — ES2020</p>
+
+    <p><code>Promise.allSettled(iterable)</code> always fulfills (never rejects) when all promises settle. Each result is a descriptor object:</p>
+
+    <pre><code><span class="kw">const</span> promises = [
+  <span class="cl">Promise</span>.<span class="fn">resolve</span>(<span class="str">'success'</span>),
+  <span class="cl">Promise</span>.<span class="fn">reject</span>(<span class="kw">new</span> <span class="cl">Error</span>(<span class="str">'failed'</span>)),
+  <span class="cl">Promise</span>.<span class="fn">resolve</span>(<span class="nm">42</span>),
+];
+
+<span class="cl">Promise</span>.<span class="fn">allSettled</span>(promises).<span class="fn">then</span>(results => {
+  results.<span class="fn">forEach</span>(result => {
+    <span class="kw">if</span> (result.status === <span class="str">'fulfilled'</span>) {
+      console.<span class="fn">log</span>(<span class="str">'Value:'</span>, result.value);
+    } <span class="kw">else</span> {
+      console.<span class="fn">log</span>(<span class="str">'Reason:'</span>, result.reason.<span class="nm">message</span>);
+    }
+  });
+});
+<span class="cm">// Value: 'success'</span>
+<span class="cm">// Reason: 'failed'</span>
+<span class="cm">// Value: 42</span></code></pre>
+
+    <table>
+      <tr><th>Result status</th><th>Properties</th></tr>
+      <tr><td><code>fulfilled</code></td><td><code>{ status: 'fulfilled', value: ... }</code></td></tr>
+      <tr><td><code>rejected</code></td><td><code>{ status: 'rejected', reason: ... }</code></td></tr>
+    </table>
+  </section>
+
+  <!-- 12. PROMISE.ANY -->
+  <section class="section" id="any">
+    <div class="section-number">// 12</div>
+    <h2>Promise.any()</h2>
+    <p class="section-sub">First to fulfill wins — ES2021</p>
+
+    <p><code>Promise.any(iterable)</code> returns a Promise that:</p>
+    <ul>
+      <li><strong>Fulfills</strong> with the value of the <em>first</em> fulfilled Promise</li>
+      <li><strong>Rejects</strong> with an <code>AggregateError</code> only if <em>all</em> promises reject</li>
+    </ul>
+
+    <pre><code><span class="kw">const</span> mirrors = [
+  <span class="fn">fetch</span>(<span class="str">'https://cdn1.example.com/file'</span>),
+  <span class="fn">fetch</span>(<span class="str">'https://cdn2.example.com/file'</span>),
+  <span class="fn">fetch</span>(<span class="str">'https://cdn3.example.com/file'</span>),
+];
+
+<span class="cm">// Use whichever CDN responds first</span>
+<span class="cl">Promise</span>.<span class="fn">any</span>(mirrors)
+  .<span class="fn">then</span>(response => response.<span class="fn">blob</span>())
+  .<span class="fn">catch</span>(err => {
+    <span class="cm">// AggregateError if ALL three fail</span>
+    console.<span class="fn">log</span>(err.<span class="nm">errors</span>); <span class="cm">// array of all rejection reasons</span>
+  });</code></pre>
+
+    <div class="callout info">
+      <strong>AggregateError</strong>
+      <p>When all promises reject, <code>Promise.any()</code> rejects with an <code>AggregateError</code> which has an <code>.errors</code> property — an array of all individual rejection reasons, in input order.</p>
+    </div>
+  </section>
+
+  <!-- 13. PROMISE.RACE -->
+  <section class="section" id="race">
+    <div class="section-number">// 13</div>
+    <h2>Promise.race()</h2>
+    <p class="section-sub">First to settle (fulfill OR reject) wins</p>
+
+    <p><code>Promise.race(iterable)</code> returns a Promise that settles with the same value/reason as the <em>first</em> promise that settles — regardless of whether it fulfills or rejects.</p>
+
+    <pre><code><span class="cm">// Classic: adding a timeout to any async operation</span>
+<span class="kw">function</span> <span class="fn">withTimeout</span>(promise, ms) {
+  <span class="kw">const</span> timeout = <span class="kw">new</span> <span class="cl">Promise</span>((_, reject) =>
+    <span class="fn">setTimeout</span>(() => reject(<span class="kw">new</span> <span class="cl">Error</span>(<span class="str">`Timed out after ${ms}ms`</span>)), ms)
+  );
+  <span class="kw">return</span> <span class="cl">Promise</span>.<span class="fn">race</span>([promise, timeout]);
+}
+
+<span class="fn">withTimeout</span>(<span class="fn">fetch</span>(<span class="str">'/api/slow-endpoint'</span>), <span class="nm">5000</span>)
+  .<span class="fn">then</span>(res => res.<span class="fn">json</span>())
+  .<span class="fn">catch</span>(err => console.<span class="fn">error</span>(err.<span class="nm">message</span>));
+<span class="cm">// → Either the data, or 'Timed out after 5000ms'</span></code></pre>
+
+    <div class="method-grid">
+      <div class="method-card">
+        <div class="method-name">Promise.all()</div>
+        <p>Fulfills when ALL fulfill. Rejects immediately if ANY rejects. Returns array of values.</p>
+      </div>
+      <div class="method-card">
+        <div class="method-name">Promise.allSettled()</div>
+        <p>Always fulfills when ALL settle. Returns array of result descriptors. Never rejects.</p>
+      </div>
+      <div class="method-card">
+        <div class="method-name">Promise.any()</div>
+        <p>Fulfills when FIRST fulfills. Rejects with AggregateError if ALL reject.</p>
+      </div>
+      <div class="method-card">
+        <div class="method-name">Promise.race()</div>
+        <p>Settles (either way) with the FIRST to settle. Useful for timeouts.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14. ASYNC/AWAIT -->
+  <section class="section" id="async-await">
+    <div class="section-number">// 14</div>
+    <h2>async / await</h2>
+    <p class="section-sub">Syntactic sugar over Promises — ES2017</p>
+
+    <p><code>async/await</code> doesn't replace Promises — it <em>is</em> Promises, with cleaner syntax. An <code>async</code> function always returns a Promise. <code>await</code> pauses execution until the Promise settles.</p>
+
+    <pre><code><span class="cm">// Promise chain approach</span>
+<span class="kw">function</span> <span class="fn">getUser</span>(id) {
+  <span class="kw">return</span> <span class="fn">fetch</span>(<span class="str">`/api/users/${id}`</span>)
+    .<span class="fn">then</span>(res => res.<span class="fn">json</span>())
+    .<span class="fn">then</span>(user => {
+      <span class="kw">return</span> <span class="fn">fetch</span>(<span class="str">`/api/orders/${user.id}`</span>)
+        .<span class="fn">then</span>(res => res.<span class="fn">json</span>())
+        .<span class="fn">then</span>(orders => ({ user, orders }));
+    });
+}
+
+<span class="cm">// Same thing with async/await — much cleaner!</span>
+<span class="kw">async function</span> <span class="fn">getUser</span>(id) {
+  <span class="kw">const</span> userRes = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`/api/users/${id}`</span>);
+  <span class="kw">const</span> user = <span class="kw">await</span> userRes.<span class="fn">json</span>();
+
+  <span class="kw">const</span> ordersRes = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`/api/orders/${user.id}`</span>);
+  <span class="kw">const</span> orders = <span class="kw">await</span> ordersRes.<span class="fn">json</span>();
+
+  <span class="kw">return</span> { user, orders };  <span class="cm">// async function wraps in Promise</span>
+}</code></pre>
+
+    <h4>await with Promise.all() for parallelism</h4>
+    <pre><code><span class="kw">async function</span> <span class="fn">loadDashboard</span>() {
+  <span class="cm">// ❌ Sequential — 3 seconds total if each takes 1s</span>
+  <span class="kw">const</span> users = <span class="kw">await</span> <span class="fn">fetchUsers</span>();
+  <span class="kw">const</span> stats = <span class="kw">await</span> <span class="fn">fetchStats</span>();
+  <span class="kw">const</span> logs  = <span class="kw">await</span> <span class="fn">fetchLogs</span>();
+
+  <span class="cm">// ✅ Parallel — ~1 second total</span>
+  <span class="kw">const</span> [users, stats, logs] = <span class="kw">await</span> <span class="cl">Promise</span>.<span class="fn">all</span>([
+    <span class="fn">fetchUsers</span>(),
+    <span class="fn">fetchStats</span>(),
+    <span class="fn">fetchLogs</span>(),
+  ]);
+
+  <span class="kw">return</span> { users, stats, logs };
+}</code></pre>
+
+    <h4>async functions always return a Promise</h4>
+    <pre><code><span class="kw">async function</span> <span class="fn">add</span>(a, b) {
+  <span class="kw">return</span> a + b;  <span class="cm">// wrapped in Promise.resolve()</span>
+}
+
+add(<span class="nm">1</span>, <span class="nm">2</span>).<span class="fn">then</span>(console.log); <span class="cm">// → 3</span>
+
+<span class="cm">// Throwing inside async rejects the returned Promise</span>
+<span class="kw">async function</span> <span class="fn">fail</span>() {
+  <span class="kw">throw</span> <span class="kw">new</span> <span class="cl">Error</span>(<span class="str">'async error'</span>);
+}
+fail().<span class="fn">catch</span>(err => console.<span class="fn">log</span>(err.<span class="nm">message</span>)); <span class="cm">// → 'async error'</span></code></pre>
+  </section>
+
+  <!-- 15. ERROR HANDLING -->
+  <section class="section" id="error-handling">
+    <div class="section-number">// 15</div>
+    <h2>Error Handling</h2>
+    <p class="section-sub">Catching, recovering, and propagating errors</p>
+
+    <h3>try/catch with async/await</h3>
+    <pre><code><span class="kw">async function</span> <span class="fn">loadData</span>() {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/data'</span>);
+    <span class="kw">if</span> (!res.ok) <span class="kw">throw</span> <span class="kw">new</span> <span class="cl">Error</span>(<span class="str">`HTTP ${res.status}`</span>);
+    <span class="kw">return</span> <span class="kw">await</span> res.<span class="fn">json</span>();
+  } <span class="kw">catch</span> (err) {
+    <span class="kw">if</span> (err.<span class="nm">name</span> === <span class="str">'TypeError'</span>) {
+      console.<span class="fn">error</span>(<span class="str">'Network error or CORS issue'</span>);
+    } <span class="kw">else</span> {
+      console.<span class="fn">error</span>(<span class="str">'Request failed:'</span>, err.<span class="nm">message</span>);
+    }
+    <span class="kw">throw</span> err; <span class="cm">// re-throw if you can't recover</span>
+  } <span class="kw">finally</span> {
+    <span class="fn">hideSpinner</span>();
+  }
+}</code></pre>
+
+    <h3>Global unhandled rejection handler</h3>
+    <pre><code><span class="cm">// Browser</span>
+window.<span class="fn">addEventListener</span>(<span class="str">'unhandledrejection'</span>, event => {
+  console.<span class="fn">error</span>(<span class="str">'Unhandled rejection:'</span>, event.reason);
+  event.<span class="fn">preventDefault</span>(); <span class="cm">// prevent default browser logging</span>
+});
+
+<span class="cm">// Node.js</span>
+process.<span class="fn">on</span>(<span class="str">'unhandledRejection'</span>, (reason, promise) => {
+  console.<span class="fn">error</span>(<span class="str">'Unhandled rejection at:'</span>, promise, <span class="str">'reason:'</span>, reason);
+  process.<span class="fn">exit</span>(<span class="nm">1</span>); <span class="cm">// exit with failure code</span>
+});</code></pre>
+
+    <div class="callout info">
+      <strong>Error swallowing</strong>
+      <p>An empty <code>.catch()</code> silently swallows errors. This is almost always a bug. At minimum, log the error. Only suppress errors when you've intentionally handled the failure case and the rest of the program can proceed normally.</p>
+    </div>
+  </section>
+
+  <!-- 16. PATTERNS -->
+  <section class="section" id="patterns">
+    <div class="section-number">// 16</div>
+    <h2>Useful Patterns</h2>
+    <p class="section-sub">Real-world recipes with Promises</p>
+
+    <h3>Sequential Iteration</h3>
+    <pre><code><span class="cm">// Process items one-by-one (not in parallel)</span>
+<span class="kw">async function</span> <span class="fn">processSequentially</span>(items) {
+  <span class="kw">const</span> results = [];
+  <span class="kw">for</span> (<span class="kw">const</span> item <span class="kw">of</span> items) {
+    <span class="kw">const</span> result = <span class="kw">await</span> <span class="fn">processItem</span>(item); <span class="cm">// waits each time</span>
+    results.<span class="fn">push</span>(result);
+  }
+  <span class="kw">return</span> results;
+}
+
+<span class="cm">// With reduce (without async/await)</span>
+<span class="kw">function</span> <span class="fn">processSequentially</span>(items) {
+  <span class="kw">return</span> items.<span class="fn">reduce</span>(
+    (chain, item) => chain.<span class="fn">then</span>(() => <span class="fn">processItem</span>(item)),
+    <span class="cl">Promise</span>.<span class="fn">resolve</span>()
+  );
+}</code></pre>
+
+    <h3>Retry Logic</h3>
+    <pre><code><span class="kw">async function</span> <span class="fn">retry</span>(fn, retries = <span class="nm">3</span>, delay = <span class="nm">1000</span>) {
+  <span class="kw">try</span> {
+    <span class="kw">return</span> <span class="kw">await</span> <span class="fn">fn</span>();
+  } <span class="kw">catch</span> (err) {
+    <span class="kw">if</span> (retries === <span class="nm">0</span>) <span class="kw">throw</span> err;
+    <span class="kw">await</span> <span class="kw">new</span> <span class="cl">Promise</span>(resolve => <span class="fn">setTimeout</span>(resolve, delay));
+    <span class="kw">return</span> <span class="fn">retry</span>(fn, retries - <span class="nm">1</span>, delay * <span class="nm">2</span>); <span class="cm">// exponential backoff</span>
+  }
+}
+
+<span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">retry</span>(() => <span class="fn">fetch</span>(<span class="str">'/api/flaky'</span>), <span class="nm">3</span>, <span class="nm">500</span>);</code></pre>
+
+    <h3>Promisifying Callbacks</h3>
+    <pre><code><span class="cm">// Wrap any Node.js-style callback API</span>
+<span class="kw">function</span> <span class="fn">promisify</span>(fn) {
+  <span class="kw">return</span> <span class="kw">function</span>(...args) {
+    <span class="kw">return</span> <span class="kw">new</span> <span class="cl">Promise</span>((resolve, reject) => {
+      <span class="fn">fn</span>(...args, (err, result) => {
+        <span class="kw">if</span> (err) <span class="fn">reject</span>(err);
+        <span class="kw">else</span> <span class="fn">resolve</span>(result);
+      });
+    });
+  };
+}
+
+<span class="kw">const</span> readFile = <span class="fn">promisify</span>(fs.readFile);
+<span class="kw">const</span> content = <span class="kw">await</span> <span class="fn">readFile</span>(<span class="str">'./file.txt'</span>, <span class="str">'utf8'</span>);
+<span class="cm">// Node.js also has util.promisify() built-in</span></code></pre>
+
+    <h3>Deferred Promise</h3>
+    <pre><code><span class="cm">// Expose resolve/reject outside the executor (use sparingly)</span>
+<span class="kw">function</span> <span class="fn">createDeferred</span>() {
+  <span class="kw">let</span> resolve, reject;
+  <span class="kw">const</span> promise = <span class="kw">new</span> <span class="cl">Promise</span>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  <span class="kw">return</span> { promise, resolve, reject };
+}
+
+<span class="kw">const</span> { promise, resolve } = <span class="fn">createDeferred</span>();
+<span class="fn">resolve</span>(<span class="str">'done later!'</span>);
+<span class="kw">await</span> promise; <span class="cm">// → 'done later!'</span></code></pre>
+  </section>
+
+  <!-- 17. GOTCHAS -->
+  <section class="section" id="gotchas">
+    <div class="section-number">// 17</div>
+    <h2>Common Gotchas</h2>
+    <p class="section-sub">Mistakes everyone makes — and how to avoid them</p>
+
+    <h3>1. Forgetting to return</h3>
+    <pre><code><span class="cm">// ❌ WRONG</span>
+getData().<span class="fn">then</span>(data => {
+  <span class="fn">processData</span>(data); <span class="cm">// not returned — chain doesn't wait</span>
+}).<span class="fn">then</span>(result => console.<span class="fn">log</span>(result)); <span class="cm">// undefined!</span>
+
+<span class="cm">// ✅ RIGHT</span>
+getData().<span class="fn">then</span>(data => <span class="fn">processData</span>(data))
+         .<span class="fn">then</span>(result => console.<span class="fn">log</span>(result));</code></pre>
+
+    <h3>2. await inside forEach</h3>
+    <pre><code><span class="cm">// ❌ WRONG — forEach doesn't await Promises!</span>
+<span class="kw">async function</span> <span class="fn">badLoop</span>(ids) {
+  ids.<span class="fn">forEach</span>(<span class="kw">async</span> id => {
+    <span class="kw">await</span> <span class="fn">processItem</span>(id); <span class="cm">// fire and forget!</span>
+  });
+  <span class="cm">// Returns before any item is processed</span>
+}
+
+<span class="cm">// ✅ RIGHT — use for...of</span>
+<span class="kw">async function</span> <span class="fn">goodLoop</span>(ids) {
+  <span class="kw">for</span> (<span class="kw">const</span> id <span class="kw">of</span> ids) {
+    <span class="kw">await</span> <span class="fn">processItem</span>(id);
+  }
+}</code></pre>
+
+    <h3>3. Creating unnecessary Promises</h3>
+    <pre><code><span class="cm">// ❌ Promise constructor anti-pattern</span>
+<span class="kw">function</span> <span class="fn">fetchData</span>() {
+  <span class="kw">return</span> <span class="kw">new</span> <span class="cl">Promise</span>((resolve, reject) => {
+    <span class="fn">fetch</span>(<span class="str">'/api/data'</span>)
+      .<span class="fn">then</span>(res => res.<span class="fn">json</span>())
+      .<span class="fn">then</span>(resolve)  <span class="cm">// unnecessary wrapping</span>
+      .<span class="fn">catch</span>(reject);
+  });
+}
+
+<span class="cm">// ✅ SIMPLE — fetch already returns a Promise</span>
+<span class="kw">function</span> <span class="fn">fetchData</span>() {
+  <span class="kw">return</span> <span class="fn">fetch</span>(<span class="str">'/api/data'</span>).<span class="fn">then</span>(res => res.<span class="fn">json</span>());
+}</code></pre>
+
+    <h3>4. Mixing async/await with .then()</h3>
+    <pre><code><span class="cm">// ❌ Confusing — pick one style per function</span>
+<span class="kw">async function</span> <span class="fn">mixed</span>() {
+  <span class="kw">return await</span> <span class="fn">fetchData</span>()
+    .<span class="fn">then</span>(data => <span class="fn">process</span>(data));
+}
+
+<span class="cm">// ✅ Pure async/await</span>
+<span class="kw">async function</span> <span class="fn">clean</span>() {
+  <span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">fetchData</span>();
+  <span class="kw">return</span> <span class="fn">process</span>(data);
+}</code></pre>
+  </section>
+
+  <!-- 18. MICROTASK QUEUE -->
+  <section class="section" id="microtask">
+    <div class="section-number">// 18</div>
+    <h2>The Microtask Queue</h2>
+    <p class="section-sub">Why Promises are always asynchronous — even when settled</p>
+
+    <p>JavaScript has an event loop with multiple queues. Promise callbacks run in the <strong>microtask queue</strong>, which has higher priority than the macrotask queue (setTimeout, setInterval, I/O).</p>
+
+    <pre><code>console.<span class="fn">log</span>(<span class="str">'1 — synchronous'</span>);
+
+<span class="fn">setTimeout</span>(() => console.<span class="fn">log</span>(<span class="str">'2 — macrotask (setTimeout)'</span>), <span class="nm">0</span>);
+
+<span class="cl">Promise</span>.<span class="fn">resolve</span>().<span class="fn">then</span>(() => console.<span class="fn">log</span>(<span class="str">'3 — microtask'</span>));
+
+console.<span class="fn">log</span>(<span class="str">'4 — synchronous'</span>);
+
+<span class="cm">// OUTPUT ORDER:</span>
+<span class="cm">// 1 — synchronous</span>
+<span class="cm">// 4 — synchronous</span>
+<span class="cm">// 3 — microtask       ← before setTimeout!</span>
+<span class="cm">// 2 — macrotask</span></code></pre>
+
+    <div class="callout info">
+      <strong>Why this matters</strong>
+      <p>Microtasks (Promises, queueMicrotask, MutationObserver) drain completely before the browser renders or the next macrotask starts. A long chain of Promises won't block rendering, but a tight loop of <code>queueMicrotask</code> calls can starve the event loop.</p>
+    </div>
+
+    <h3>Event Loop Order</h3>
+    <pre><code><span class="cm">// 1. Execute current synchronous code (call stack)</span>
+<span class="cm">// 2. Drain the ENTIRE microtask queue</span>
+<span class="cm">// 3. Render (browser only)</span>
+<span class="cm">// 4. Pick one macrotask (setTimeout, setInterval, etc.)</span>
+<span class="cm">// 5. Go to step 2</span></code></pre>
+  </section>
+
+  <!-- 19. COMPARISON TABLE -->
+  <section class="section" id="comparison">
+    <div class="section-number">// 19</div>
+    <h2>Full Comparison</h2>
+    <p class="section-sub">Callbacks vs Promises vs async/await</p>
+
+    <table>
+      <tr>
+        <th>Feature</th>
+        <th>Callbacks</th>
+        <th>Promises</th>
+        <th>async/await</th>
+      </tr>
+      <tr>
+        <td>Readability</td>
+        <td>Poor (deep nesting)</td>
+        <td>Good (flat chain)</td>
+        <td>Excellent (sync-like)</td>
+      </tr>
+      <tr>
+        <td>Error handling</td>
+        <td>Manual (every callback)</td>
+        <td>.catch() at end</td>
+        <td>try/catch</td>
+      </tr>
+      <tr>
+        <td>Parallelism</td>
+        <td>Manual coordination</td>
+        <td>Promise.all() etc.</td>
+        <td>await Promise.all()</td>
+      </tr>
+      <tr>
+        <td>Composable</td>
+        <td>Hard</td>
+        <td>Yes</td>
+        <td>Yes (they're Promises)</td>
+      </tr>
+      <tr>
+        <td>Debugging</td>
+        <td>Hard (no stack traces)</td>
+        <td>Moderate</td>
+        <td>Excellent (real stack traces)</td>
+      </tr>
+      <tr>
+        <td>Cancellation</td>
+        <td>Ad-hoc</td>
+        <td>Manual (AbortController)</td>
+        <td>AbortController + await</td>
+      </tr>
+      <tr>
+        <td>Browser support</td>
+        <td>Universal</td>
+        <td>IE11+ (with polyfill)</td>
+        <td>Modern browsers / Node 8+</td>
+      </tr>
+    </table>
+
+    <h3>Quick Reference Cheatsheet</h3>
+    <pre><code><span class="cm">// ── CREATION ────────────────────────────────────</span>
+<span class="kw">new</span> <span class="cl">Promise</span>((resolve, reject) => { ... })
+<span class="cl">Promise</span>.<span class="fn">resolve</span>(value)
+<span class="cl">Promise</span>.<span class="fn">reject</span>(reason)
+
+<span class="cm">// ── INSTANCE METHODS ────────────────────────────</span>
+promise.<span class="fn">then</span>(onFulfilled, onRejected)
+promise.<span class="fn">catch</span>(onRejected)
+promise.<span class="fn">finally</span>(onFinally)
+
+<span class="cm">// ── STATIC METHODS ──────────────────────────────</span>
+<span class="cl">Promise</span>.<span class="fn">all</span>([p1, p2, p3])          <span class="cm">// all or fail fast</span>
+<span class="cl">Promise</span>.<span class="fn">allSettled</span>([p1, p2, p3])   <span class="cm">// all, always</span>
+<span class="cl">Promise</span>.<span class="fn">any</span>([p1, p2, p3])          <span class="cm">// first to fulfill</span>
+<span class="cl">Promise</span>.<span class="fn">race</span>([p1, p2, p3])         <span class="cm">// first to settle</span>
+
+<span class="cm">// ── ASYNC / AWAIT ───────────────────────────────</span>
+<span class="kw">async function</span> <span class="fn">name</span>() {
+  <span class="kw">const</span> result = <span class="kw">await</span> somePromise();
+  <span class="kw">return</span> result;
+}</code></pre>
+  </section>
+
+  <footer class="footer">
+    <p>// JavaScript Promises — Complete Reference &nbsp;·&nbsp; ES2015 → ES2021 &nbsp;·&nbsp; Generated for learning purposes</p>
+  </footer>
+
+</main>
+
+</body>
+</html>
